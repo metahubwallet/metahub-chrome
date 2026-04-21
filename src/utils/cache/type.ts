@@ -1,0 +1,18 @@
+export type CacheKey =
+    | 'language'
+    | 'passhash'
+    | 'powupState'
+    | 'cachedAbis'
+    | 'wallets'
+    | 'authorizations'
+    | 'selectedRpcs'
+    | 'customRpcs'
+    | 'networks'
+    | 'currentNetwork'
+    | 'whitelist'
+    | 'selectedIndex'
+    | 'allTokens'
+    | 'userTokens'
+    | 'recentTransfers'
+    | 'autoLockTime'
+    ;

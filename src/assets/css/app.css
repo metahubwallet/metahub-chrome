@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a {
+    cursor: pointer;
+  }
+}
+
+@theme {
+  /* Primary */
+  --color-primary: #bf01fa;
+  --color-primary-hover: #a801d9;
+  --color-primary-pressed: #9601c0;
+
+  /* Neutrals */
+  --color-background: #ffffff;
+  --color-foreground: #1a1a2e;
+  --color-muted: #f7f7f9;
+  --color-muted-foreground: #71717a;
+  --color-border: #e4e4e7;
+  --color-border-light: #f0f0f2;
+
+  /* Status */
+  --color-destructive: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+
+  /* Surfaces */
+  --color-card: #fafafe;
+  --color-card-hover: #f5f0ff;
+  --color-card-border: #e9d8fd;
+  --color-separator: #f3e8ff;
+
+  /* Purple tints (design system) */
+  --color-purple-bg: #f7f4ff;
+  --color-purple-input: #f7f4ff;
+  --color-purple-input-border: #e3dcf7;
+
+  /* Radius */
+  --radius: 0.625rem;
+}
+
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  letter-spacing: -0.01em;
+}
+
+/* Popup specific */
+.popup-container {
+  width: 370px;
+  height: 600px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d4d4d8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a1a1aa;
+}
+
+/* Sonner toast: reserve space for close button */
+[data-sonner-toast][data-styled=true] [data-content] {
+  padding-right: 15px !important;
+}
+
+/* Sonner toast close button → right side, aligned with first line */
+[data-sonner-toast] [data-close-button] {
+  left: unset !important;
+  right: 8px !important;
+  top: 14px !important;
+  transform: none !important;
+}
+
+/* Animation helpers */
+.animate-slide-in-right {
+  animation: slideInRight 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
