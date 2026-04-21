@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { History, ChevronDown, ClipboardPaste } from 'lucide-react';
+import { History, ChevronDown } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { useWalletStore } from '@/stores/walletStore';
 import { useChainStore } from '@/stores/chainStore';
@@ -235,22 +235,6 @@ const TransferPage: React.FC = () => {
                 onBlur={() => checkReceiver()}
                 className="flex-1 bg-transparent text-sm text-[#18181B] placeholder:text-[#A1A1AA] outline-none"
               />
-              <button
-                type="button"
-                aria-label="Paste"
-                onClick={async () => {
-                  try {
-                    const text = await navigator.clipboard.readText();
-                    if (text) {
-                      setValue('receiver', text.trim());
-                      checkReceiver(text.trim());
-                    }
-                  } catch { /* clipboard not available */ }
-                }}
-                className="cursor-pointer text-[#A1A1AA] hover:text-[#6B7280] ml-2"
-              >
-                <ClipboardPaste className="h-[18px] w-[18px]" />
-              </button>
             </div>
             {receiverError && (
               <span className="text-xs text-yellow-500">{receiverError}</span>

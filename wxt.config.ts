@@ -18,7 +18,7 @@ export default defineConfig({
     name: 'Metahub Wallet',
     description: 'A Simple to Use EOS Web Wallet',
     version: '3.0.0',
-    permissions: ['storage', 'unlimitedStorage', 'scripting', 'clipboardRead', 'alarms'],
+    permissions: ['storage', 'unlimitedStorage', 'scripting', 'alarms'],
     host_permissions: ['<all_urls>'],
     web_accessible_resources: [
       {
