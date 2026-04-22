@@ -23,45 +23,20 @@ const mockCurrentUserTokens = vi.fn(() => []);
 const mockSetCurrentUserTokens = vi.fn().mockResolvedValue(undefined);
 const mockSetUserTokens = vi.fn().mockResolvedValue(undefined);
 
+// Stable object reference — if the mock returned a new object every call the
+// component's `const walletStore = useWalletStore()` would be a new reference
+// each render, invalidating its useCallback/useEffect deps and triggering an
+// infinite re-render loop (which causes an OOM under vitest).
+const mockWalletState = {
+  chainTokens: mockChainTokens,
+  currentUserTokens: mockCurrentUserTokens,
+  setCurrentUserTokens: mockSetCurrentUserTokens,
+  setUserTokens: mockSetUserTokens,
+  userTokens: {},
+};
 vi.mock('@/stores/walletStore', () => ({
-  useWalletStore: vi.fn((selector?: any) => {
-    if (selector) {
-      return selector({
-        chainTokens: mockChainTokens,
-        currentUserTokens: mockCurrentUserTokens,
-        setCurrentUserTokens: mockSetCurrentUserTokens,
-        setUserTokens: mockSetUserTokens,
-        userTokens: {},
-      });
-    }
-    return {
-      chainTokens: mockChainTokens,
-      currentUserTokens: mockCurrentUserTokens,
-      setCurrentUserTokens: mockSetCurrentUserTokens,
-      setUserTokens: mockSetUserTokens,
-      userTokens: {},
-    };
-  }),
-}));
-
-vi.mock('@/components/PopupBottom', () => ({
-  default: ({ isOpen, children, title }: any) =>
-    isOpen ? (
-      <div data-testid="popup-bottom">
-        <div data-testid="popup-title">{title}</div>
-        {children}
-      </div>
-    ) : null,
-}));
-
-vi.mock('@/components/ui/input', () => ({
-  Input: ({ value, onChange, placeholder }: any) => (
-    <input
-      data-testid="search-input"
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-    />
+  useWalletStore: vi.fn((selector?: any) =>
+    selector ? selector(mockWalletState) : mockWalletState
   ),
 }));
 
@@ -77,14 +52,15 @@ describe('TokenSelector', () => {
     mockCurrentUserTokens.mockReturnValue([]);
   });
 
-  it('renders nothing when closed', () => {
-    renderWithRouter(<TokenSelector isOpen={false} onClose={vi.fn()} />);
-    expect(screen.queryByTestId('popup-bottom')).not.toBeInTheDocument();
+  it('renders hidden (translated off-screen) when closed', () => {
+    const { container } = renderWithRouter(<TokenSelector isOpen={false} onClose={vi.fn()} />);
+    expect(container.querySelector('.translate-y-full')).toBeInTheDocument();
   });
 
-  it('renders popup when open', () => {
-    renderWithRouter(<TokenSelector isOpen={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('popup-bottom')).toBeInTheDocument();
+  it('renders visible when open', () => {
+    const { container } = renderWithRouter(<TokenSelector isOpen={true} onClose={vi.fn()} />);
+    expect(container.querySelector('.translate-y-0')).toBeInTheDocument();
+    expect(screen.getByText('wallet.addNewTokens')).toBeInTheDocument();
   });
 
   it('shows all tokens when open', () => {
@@ -95,7 +71,7 @@ describe('TokenSelector', () => {
 
   it('filters tokens by search keyword', async () => {
     renderWithRouter(<TokenSelector isOpen={true} onClose={vi.fn()} />);
-    const input = screen.getByTestId('search-input');
+    const input = screen.getByPlaceholderText('wallet.searchKeyWord');
     fireEvent.change(input, { target: { value: 'dapp' } });
     await waitFor(() => {
       expect(screen.getByText('DAPP')).toBeInTheDocument();
@@ -103,22 +79,23 @@ describe('TokenSelector', () => {
     });
   });
 
-  it('shows add-more-tokens link', () => {
-    renderWithRouter(<TokenSelector isOpen={true} onClose={vi.fn()} />);
-    expect(screen.getByText('wallet.addMoreTokens')).toBeInTheDocument();
-  });
-
-  it('navigates to add-token page when clicking the link', () => {
+  it('navigates to add-token page when clicking the + button', () => {
     const onClose = vi.fn();
-    renderWithRouter(<TokenSelector isOpen={true} onClose={onClose} />);
-    fireEvent.click(screen.getByText('wallet.addMoreTokens'));
+    const { container } = renderWithRouter(<TokenSelector isOpen={true} onClose={onClose} />);
+    // The "+" button is the second header-level button (after the X close button).
+    const buttons = container.querySelectorAll('.h-14 button, .h-\\[50px\\] button');
+    // Second button in the header area (Plus icon navigates to /add-token).
+    const plusBtn = Array.from(buttons).find((b) =>
+      b.querySelector('.lucide-plus')
+    ) as HTMLElement;
+    fireEvent.click(plusBtn);
     expect(onClose).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('/add-token');
   });
 
   it('toggles token on click', async () => {
     renderWithRouter(<TokenSelector isOpen={true} onClose={vi.fn()} />);
-    const toggleButtons = screen.getAllByRole('button');
+    const toggleButtons = screen.getAllByLabelText(/add token/i);
     fireEvent.click(toggleButtons[0]);
     await waitFor(() => {
       expect(mockSetCurrentUserTokens).toHaveBeenCalled();

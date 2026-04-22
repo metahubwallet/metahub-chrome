@@ -95,7 +95,7 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
   const modalTitle = React.useMemo(() => {
     if (action === 'stake') return `${t('resource.stake')} ${t('resource.resources')}`;
     if (action === 'refund') return `${t('resource.unstake')} ${t('resource.resources')}`;
-    return `${t('resource.rent')}${t('resource.resources')}`;
+    return `${t('resource.rent')} ${t('resource.resources')}`;
   }, [action, t]);
 
   const receiverVisible = action === 'stake' || action === 'rent';

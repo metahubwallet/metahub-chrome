@@ -86,30 +86,30 @@ describe('SettingPage', () => {
   it('navigates to node settings on click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.nodesSetting'));
-    expect(mockNavigate).toHaveBeenCalledWith('/network-select?type=node');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/network-select?type=node');
   });
 
   it('navigates to wallet manage on click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.manageWallets'));
-    expect(mockNavigate).toHaveBeenCalledWith('/wallet-manage');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/wallet-manage');
   });
 
   it('navigates to whitelist on click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.whitelist'));
-    expect(mockNavigate).toHaveBeenCalledWith('/whitelist');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/whitelist');
   });
 
   it('navigates to network manage on click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.manageNetworks'));
-    expect(mockNavigate).toHaveBeenCalledWith('/network-manage');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/network-manage');
   });
 
   it('navigates to language setting on click', () => {
     renderPage();
     fireEvent.click(screen.getByText('public.setLanguage'));
-    expect(mockNavigate).toHaveBeenCalledWith('/setting-language');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/language');
   });
 });

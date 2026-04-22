@@ -7,6 +7,8 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() } }));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -28,24 +30,14 @@ vi.mock('@/stores/walletStore', () => ({
 }));
 
 const mockGetCurrencyStats = vi.fn();
-vi.mock('@/lib/chain', () => ({
-  default: {
-    getApi: vi.fn(() => ({ getCurrencyStats: mockGetCurrencyStats })),
-  },
+vi.mock('@/hooks/useChainInstance', () => ({
+  getChainInstance: () => ({
+    getApi: () => ({ getCurrencyStats: mockGetCurrencyStats }),
+  }),
 }));
 
 vi.mock('@/components/PageHeader', () => ({
   default: ({ title }: any) => <div data-testid="page-header">{title}</div>,
-}));
-vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, disabled }: any) => (
-    <button onClick={onClick} disabled={disabled}>{children}</button>
-  ),
-}));
-vi.mock('@/components/ui/input', () => ({
-  Input: ({ value, onChange, placeholder }: any) => (
-    <input value={value} onChange={onChange} placeholder={placeholder} />
-  ),
 }));
 
 import AddTokenPage from '../AddTokenPage';
@@ -60,8 +52,8 @@ describe('AddTokenPage', () => {
 
   it('renders contract and symbol inputs', () => {
     renderWithRouter(<AddTokenPage />);
-    const inputs = screen.getAllByPlaceholderText('wallet.required');
-    expect(inputs).toHaveLength(2);
+    expect(screen.getByPlaceholderText('wallet.enterContractName')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('wallet.enterTokenSymbol')).toBeInTheDocument();
   });
 
   it('renders submit button', () => {
@@ -74,9 +66,12 @@ describe('AddTokenPage', () => {
 
     renderWithRouter(<AddTokenPage />);
 
-    const inputs = screen.getAllByPlaceholderText('wallet.required');
-    fireEvent.change(inputs[0], { target: { value: 'eosio.token' } });
-    fireEvent.change(inputs[1], { target: { value: 'EOS' } });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterContractName'), {
+      target: { value: 'eosio.token' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterTokenSymbol'), {
+      target: { value: 'EOS' },
+    });
 
     fireEvent.click(screen.getByText('wallet.submit'));
 
@@ -89,14 +84,17 @@ describe('AddTokenPage', () => {
     });
   });
 
-  it('shows error toast when currency stats not found', async () => {
+  it('does not add token when currency stats not found', async () => {
     mockGetCurrencyStats.mockRejectedValue(new Error('Not found'));
 
     renderWithRouter(<AddTokenPage />);
 
-    const inputs = screen.getAllByPlaceholderText('wallet.required');
-    fireEvent.change(inputs[0], { target: { value: 'fake.contract' } });
-    fireEvent.change(inputs[1], { target: { value: 'FAKE' } });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterContractName'), {
+      target: { value: 'fake.contract' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterTokenSymbol'), {
+      target: { value: 'FAKE' },
+    });
 
     fireEvent.click(screen.getByText('wallet.submit'));
 
@@ -105,7 +103,7 @@ describe('AddTokenPage', () => {
     });
   });
 
-  it('shows error when token already exists', async () => {
+  it('does not add token when it already exists', async () => {
     mockGetCurrencyStats.mockResolvedValue({ max_supply: '1000000.0000 EOS' });
     const { useWalletStore } = await import('@/stores/walletStore');
     (useWalletStore as any).getState.mockReturnValue({
@@ -115,9 +113,12 @@ describe('AddTokenPage', () => {
 
     renderWithRouter(<AddTokenPage />);
 
-    const inputs = screen.getAllByPlaceholderText('wallet.required');
-    fireEvent.change(inputs[0], { target: { value: 'eosio.token' } });
-    fireEvent.change(inputs[1], { target: { value: 'EOS' } });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterContractName'), {
+      target: { value: 'eosio.token' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('wallet.enterTokenSymbol'), {
+      target: { value: 'EOS' },
+    });
 
     fireEvent.click(screen.getByText('wallet.submit'));
 

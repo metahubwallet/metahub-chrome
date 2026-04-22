@@ -61,9 +61,10 @@ describe('TransactionDetailPage', () => {
     expect(screen.getByText('wallet.transaction')).toBeInTheDocument();
   });
 
-  it('shows transferSuccess label', () => {
+  it('shows the amount display in the success header', () => {
     renderPage();
-    expect(screen.getByText('wallet.transferSuccess')).toBeInTheDocument();
+    // No transferSuccess label in current design; amount serves as the main header
+    expect(screen.getByText('+5.0000 EOS')).toBeInTheDocument();
   });
 
   it('shows positive amount for incoming transaction (receiver === currentWallet)', () => {
@@ -93,11 +94,12 @@ describe('TransactionDetailPage', () => {
     expect(screen.getByText('test memo')).toBeInTheDocument();
   });
 
-  it('displays transaction hash', () => {
+  it('displays transaction hash (truncated)', () => {
     renderPage();
-    expect(
-      screen.getByText('abc123def456abc123def456abc123def456abc123def456abc123def456abc123'),
-    ).toBeInTheDocument();
+    // Hash is formatted as first-11...last-11
+    const hash = 'abc123def456abc123def456abc123def456abc123def456abc123def456abc123';
+    const truncated = `${hash.slice(0, 11)}...${hash.slice(-11)}`;
+    expect(screen.getByText(truncated)).toBeInTheDocument();
   });
 
   it('displays block number', () => {
@@ -112,18 +114,18 @@ describe('TransactionDetailPage', () => {
 
   it('renders explorer links', () => {
     renderPage();
-    expect(screen.getByText('bloks')).toBeInTheDocument();
+    expect(screen.getByText('vaultascan')).toBeInTheDocument();
+    expect(screen.getByText('eosauthority')).toBeInTheDocument();
     expect(screen.getByText('eosflare')).toBeInTheDocument();
-    expect(screen.getByText('eosx')).toBeInTheDocument();
-    expect(screen.getByText('eosq')).toBeInTheDocument();
+    expect(screen.getByText('eoseyes')).toBeInTheDocument();
   });
 
-  it('bloks link points to correct URL', () => {
+  it('vaultascan link points to correct URL', () => {
     renderPage();
-    const bloksLink = screen.getByText('bloks').closest('a');
-    expect(bloksLink).toHaveAttribute(
+    const link = screen.getByText('vaultascan').closest('a');
+    expect(link).toHaveAttribute(
       'href',
-      `https://bloks.io/transaction/${trxFixture.trx_id}`,
+      `https://vaultascan.io/tx/${trxFixture.trx_id}`,
     );
   });
 
@@ -136,18 +138,21 @@ describe('TransactionDetailPage', () => {
     );
   });
 
-  it('eosx link points to correct URL', () => {
+  it('eosauthority link points to correct URL', () => {
     renderPage();
-    const eosxLink = screen.getByText('eosx').closest('a');
-    expect(eosxLink).toHaveAttribute('href', `https://www.eosx.io/tx/${trxFixture.trx_id}`);
+    const link = screen.getByText('eosauthority').closest('a');
+    expect(link).toHaveAttribute(
+      'href',
+      `https://eosauthority.com/transaction/${trxFixture.trx_id}`,
+    );
   });
 
-  it('eosq link points to correct URL', () => {
+  it('eoseyes link points to correct URL', () => {
     renderPage();
-    const eosqLink = screen.getByText('eosq').closest('a');
-    expect(eosqLink).toHaveAttribute(
+    const link = screen.getByText('eoseyes').closest('a');
+    expect(link).toHaveAttribute(
       'href',
-      `https://eos.eosq.eosnation.io/tx/${trxFixture.trx_id}`,
+      `https://eoseyes.com/tx/${trxFixture.trx_id}`,
     );
   });
 

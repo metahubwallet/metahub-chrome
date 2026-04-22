@@ -7,12 +7,13 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
+// Stable findNetwork reference — if it were inlined inside the selector,
+// every render would see a new function and ImportChoose's useEffect
+// (which depends on findNetwork) would loop forever → OOM.
+const mockFindNetwork = (chainId: string) => ({ name: 'EOS', chainId } as any);
+const mockChainState = { findNetwork: mockFindNetwork };
 vi.mock('@/stores/chainStore', () => ({
-  useChainStore: vi.fn((selector: any) =>
-    selector({
-      findNetwork: (chainId: string) => ({ name: 'EOS', chainId }),
-    })
-  ),
+  useChainStore: vi.fn((selector: any) => selector(mockChainState)),
 }));
 
 vi.mock('@/components/PopupBottom', () => ({
@@ -92,16 +93,15 @@ describe('ImportChoose', () => {
     );
   });
 
-  it('toggles select all', () => {
+  it('toggles select all deselects all, then import is called with empty array', () => {
+    const onImport = vi.fn();
     renderWithRouter(
-      <ImportChoose isOpen={true} accountList={mockWallets} onClose={vi.fn()} onImport={vi.fn()} />
+      <ImportChoose isOpen={true} accountList={mockWallets} onClose={vi.fn()} onImport={onImport} />
     );
-    // Select All button
-    const selectAllBtn = screen.getByText('public.selectAll');
-    // Initially all selected (checkboxes visible)
-    const checkIcons = screen.getAllByRole('img', { hidden: true });
-    fireEvent.click(selectAllBtn);
-    // After clicking, deselect all
+    // First click deselects everything; second click reselects.
+    fireEvent.click(screen.getByText('public.selectAll'));
+    fireEvent.click(screen.getByText('wallet.importSelectedWallets'));
+    expect(onImport).toHaveBeenCalledWith([]);
   });
 
   it('deselects individual account on click', () => {

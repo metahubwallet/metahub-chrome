@@ -85,12 +85,12 @@ describe('ReceivePage', () => {
 
   it('renders a copy button for the wallet address', () => {
     renderPage();
-    const copyBtn = screen.getByRole('button', { name: /copy to clipboard/i });
+    const copyBtn = screen.getByRole('button', { name: /copy address/i });
     expect(copyBtn).toBeInTheDocument();
   });
 
-  it('shows accountInfo i18n label', () => {
+  it('shows accountAddress i18n label', () => {
     renderPage();
-    expect(screen.getByText(/wallet.accountInfo/i)).toBeInTheDocument();
+    expect(screen.getByText(/wallet.accountAddress/i)).toBeInTheDocument();
   });
 });

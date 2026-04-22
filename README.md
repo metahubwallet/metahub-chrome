@@ -4,6 +4,10 @@ A simple, multi-chain EOS web wallet browser extension.
 
 Supports Chrome and Firefox, built on Manifest V3.
 
+Project website: https://wallet.metahub-ai.com  
+Github link: https://github.com/metahubwallet/metahub-chrome  
+Chrome extension link: https://chrome.google.com/webstore/detail/metahub-easy-to-use-eos-w/nglnaekfdaelelcaokeemlnopjhekdkj
+
 ## Features
 
 - **Multi-chain** — EOS, WAX, Telos, Proton, BOS, and several testnets
@@ -98,15 +102,58 @@ Open the **Resources** tab for the active account:
 
 ### DApp integration
 
-DApps can talk to the wallet via the injected API:
+DApps talk to the wallet through [`@metahubwallet/sdk`](https://github.com/metahubwallet/metahub-sdk), a typed browser SDK that wraps the page-injected provider.
 
-```javascript
-const identity = await metahub.login();
-const result   = await metahub.requestSignature(transaction);
-await metahub.logout();
+```bash
+npm install @metahubwallet/sdk
+```
+
+```ts
+import { MetahubClient } from '@metahubwallet/sdk'
+
+const client = new MetahubClient({
+  appName: 'my-dapp',
+  chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+})
+
+const identity = await client.login()
+
+const { signatures, transaction } = await client.requestSignature({
+  account: 'eosio.token',
+  name: 'transfer',
+  authorization: [{ actor: identity.name, permission: 'active' }],
+  data: { from: identity.name, to: 'bob', quantity: '1.0000 EOS', memo: '' },
+})
+
+await client.logout()
 ```
 
 Signature requests open an approval window where the user inspects the transaction and approves or rejects it. Frequently-used actions can be whitelisted for automatic approval.
+
+#### DApp integration (Use WharfKit)
+
+If your DApp already uses WharfKit Session Kit, use [`@metahubwallet/wallet-plugin-metahub`](https://github.com/metahubwallet/metahub-wharf-plugin) — a thin Session Kit wallet plugin built on top of the SDK.
+
+```bash
+npm install @metahubwallet/wallet-plugin-metahub
+```
+
+```ts
+import { SessionKit } from '@wharfkit/session'
+import { WalletPluginMetahub } from '@metahubwallet/wallet-plugin-metahub'
+
+const kit = new SessionKit({
+  appName: 'my-dapp',
+  chains: [{ id: 'aca376f2…', url: 'https://eos.greymass.com' }],
+  ui: /* your Session Kit UI */,
+  walletPlugins: [new WalletPluginMetahub()],
+})
+
+const { session } = await kit.login()
+await session.transact({ actions: [/* … */] })
+```
+
+The plugin transparently handles wallet-side transforms such as Metahub's smooth mode (which prepends a `metahubpower::noop` action for CPU cosigning) and returns the transformed transaction to Session Kit for broadcast.
 
 ### Backup & restore
 

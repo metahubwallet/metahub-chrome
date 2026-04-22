@@ -181,17 +181,6 @@ export default class EOSApi {
         return price;
     }
 
-    async getKeyAccounts(publicKey: string) {
-        try {
-            const result = await this.client.v1.chain.get_accounts_by_authorizers({ keys: [publicKey] });
-            const accounts = result.accounts.map((a) => a.account_name.toString());
-            return Array.from(new Set(accounts));
-        } catch (e) {
-            console.log(e);
-            return [];
-        }
-    }
-
     async testHttpEndpoint(endpoint = '') {
         const testClient = new APIClient({ url: endpoint });
         return await testClient.v1.chain.get_info();

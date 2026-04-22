@@ -69,7 +69,7 @@ const SettingPage: React.FC = () => {
       {
         icon: <Info className="h-5 w-5" />,
         title: t('setting.aboutUs'),
-        onClick: () => window.open('https://metahub-ai.com/', '_blank'),
+        onClick: () => window.open('https://wallet.metahub-ai.com/', '_blank'),
         showArrow: true,
       },
     ],

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { ChevronDown } from 'lucide-react';
 import { sha256, encryptV3, makeKeySalt } from '@/utils/crypto';
 import { isValidPrivate, privateToPublic } from '@/lib/keyring';
-import { getKeyAccounts, lightKey } from '@/lib/remote';
+import { queryKeyAccountsWithFallback, getEndpoints } from '@/lib/remote';
 import { useChainStore } from '@/stores/chainStore';
 import { useWalletStore } from '@/stores/walletStore';
 import { useUserStore } from '@/stores/userStore';
@@ -138,14 +138,20 @@ const ImportKeyPage: React.FC = () => {
       chainAccount.keys = [keyEntry];
 
       try {
-        let accounts: string[] = [];
+        const chainStore = useChainStore.getState();
+        const defaultEndpoint = chainStore.selectedRpc(network.chainId) || network.endpoint || '';
+        const custom = (chainStore.customRpcs[network.chainId] || []).map((r) => r.endpoint);
+        let remoteEps: string[] = [];
         try {
-          accounts = await getKeyAccounts(network?.chain as lightKey, publicKey);
-        } catch (_e) {}
-
-        if (accounts.length === 0) {
-          accounts = await getChainInstance().getApi(network?.chainId).getKeyAccounts(publicKey);
+          const eps = await getEndpoints(network.chain);
+          remoteEps = (eps as Array<{ endpoint: string }>).map((r) => r.endpoint).filter(Boolean);
+        } catch {
+          // ignore
         }
+        const accounts = await queryKeyAccountsWithFallback(publicKey, defaultEndpoint, [
+          ...custom,
+          ...remoteEps,
+        ]);
 
         const walletStore = useWalletStore.getState();
         for (const account of accounts) {

@@ -1,17 +1,6 @@
 import axios from 'axios';
+import { APIClient } from '@wharfkit/antelope';
 import { Balance, Coin } from '@/types/tokens';
-
-//https://wax.greymass.com/v1
-const lightApis = {
-    eos: 'https://eos.light-api.net',
-    wax: 'https://wax.light-api.net',
-    telos: 'https://telos.light-api.net',
-    proton: 'https://proton.light-api.net',
-    kylin: 'https://testnet-lightapi.eosams.xeos.me',
-    'telos-test': 'https://testnet-lightapi.eosams.xeos.me',
-    'wax-test': 'https://testnet-lightapi.eosams.xeos.me',
-    'proton-test': 'https://testnet-lightapi.eosams.xeos.me',
-};
 
 const hyperionApis = {
     eos: 'https://eos.hyperion.eosrio.io', //https://api.eossweden.org/v2
@@ -28,16 +17,6 @@ const hyperionApis = {
     'proton-test': 'https://testnet.protonchain.com',
 };
 
-export type lightKey =
-    | 'eos'
-    | 'wax'
-    | 'telos'
-    | 'proton'
-    | 'kylin'
-    | 'telos-test'
-    | 'wax-test'
-    | 'proton-test';
-
 type hyperionKey =
     | 'eos'
     | 'bos'
@@ -52,7 +31,7 @@ type hyperionKey =
     | 'wax-test'
     | 'proton-test';
 
-export { lightApis, hyperionApis };
+export { hyperionApis };
 
 export const isSupportChain = (chainName: string) => {
     return hyperionApis[chainName as hyperionKey] ? true : false;
@@ -69,21 +48,59 @@ export const getEndpoints = async (chainName: string) => {
     }
 };
 
-export const getKeyAccounts = async (chain: lightKey, publicKey: string) => {
-    try {
-        if (!lightApis[chain]) return [];
+const queryKeyAccountsAt = async (publicKey: string, endpoint: string): Promise<string[]> => {
+    const client = new APIClient({ url: endpoint });
+    const result = await client.v1.chain.get_accounts_by_authorizers({ keys: [publicKey] });
+    const accounts = (result as any).accounts.map((a: any) => a.account_name.toString()) as string[];
+    return Array.from(new Set(accounts));
+};
 
-        let res = await axios.get(lightApis[chain] + '/api/key/' + publicKey);
-        if (res.status === 200 && res.data) {
-            const ckey = chain.replace('-', '');
-            if (res.data[ckey]) {
-                const accounts = res.data[ckey].accounts;
-                return Object.keys(accounts);
-            }
+// Try default endpoint first; if get_accounts_by_authorizers is unavailable,
+// ping the alternatives, sort by latency, and try each until one succeeds.
+export const queryKeyAccountsWithFallback = async (
+    publicKey: string,
+    defaultEndpoint: string,
+    alternativeEndpoints: string[],
+): Promise<string[]> => {
+    if (defaultEndpoint) {
+        try {
+            return await queryKeyAccountsAt(publicKey, defaultEndpoint);
+        } catch (e) {
+            console.warn('get_accounts_by_authorizers failed on default endpoint', e);
         }
-    } catch (e) {
-        console.error(e);
     }
+
+    const candidates = Array.from(
+        new Set(alternativeEndpoints.filter((ep) => ep && ep !== defaultEndpoint))
+    );
+    if (candidates.length === 0) return [];
+
+    const pings = await Promise.all(
+        candidates.map(async (url) => {
+            const start = Date.now();
+            try {
+                await Promise.race([
+                    new APIClient({ url }).v1.chain.get_info(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+                ]);
+                return { url, latency: Date.now() - start };
+            } catch {
+                return { url, latency: Infinity };
+            }
+        })
+    );
+    const sorted = pings
+        .filter((x) => x.latency !== Infinity)
+        .sort((a, b) => a.latency - b.latency);
+
+    for (const { url } of sorted) {
+        try {
+            return await queryKeyAccountsAt(publicKey, url);
+        } catch {
+            // try next
+        }
+    }
+
     return [];
 };
 
@@ -94,7 +111,6 @@ export const getBalanceList = async (
     onBlanceInquired: Function
 ) => {
     try {
-        // to use: http://light-api/api/account/CHAIN/ACCOUNT
         const balances = [] as Balance[];
         for (const t of tokens) {
             const balance = await chainApi.getCurrencyBalance(t.contract, account, t.symbol);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isSupportChain, getBalanceList, lightApis, hyperionApis } from '@/lib/remote';
+import { isSupportChain, getBalanceList, hyperionApis } from '@/lib/remote';
 
 describe('remote', () => {
     describe('isSupportChain', () => {
@@ -29,27 +29,6 @@ describe('remote', () => {
 
         it('returns false for ethereum', () => {
             expect(isSupportChain('ethereum')).toBe(false);
-        });
-    });
-
-    describe('lightApis', () => {
-        it('has an entry for eos', () => {
-            expect(lightApis).toHaveProperty('eos');
-            expect(lightApis.eos).toBeTruthy();
-        });
-
-        it('has an entry for wax', () => {
-            expect(lightApis).toHaveProperty('wax');
-            expect(lightApis.wax).toBeTruthy();
-        });
-
-        it('has an entry for telos', () => {
-            expect(lightApis).toHaveProperty('telos');
-            expect(lightApis.telos).toBeTruthy();
-        });
-
-        it('eos entry starts with https', () => {
-            expect(lightApis.eos.startsWith('https')).toBe(true);
         });
     });
 

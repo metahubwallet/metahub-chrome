@@ -93,14 +93,14 @@ describe('GeneratePublicKey', () => {
   it('shows generated public key', async () => {
     renderComponent();
     await waitFor(() => {
-      expect(screen.getByText('EOS_GENERATED_PUBLIC_KEY')).toBeInTheDocument();
+      expect(screen.getAllByText('EOS_GENERATED_PUBLIC_KEY').length).toBeGreaterThan(0);
     });
   });
 
   it('shows generated private key', async () => {
     renderComponent();
     await waitFor(() => {
-      expect(screen.getByText('GENERATED_PRIVATE_KEY')).toBeInTheDocument();
+      expect(screen.getAllByText('GENERATED_PRIVATE_KEY').length).toBeGreaterThan(0);
     });
   });
 
@@ -124,7 +124,7 @@ describe('GeneratePublicKey', () => {
   it('calls onUseKey and onClose on use it click', async () => {
     renderComponent();
     await waitFor(() => {
-      expect(screen.getByText('EOS_GENERATED_PUBLIC_KEY')).toBeInTheDocument();
+      expect(screen.getAllByText('EOS_GENERATED_PUBLIC_KEY').length).toBeGreaterThan(0);
     });
     fireEvent.click(screen.getByText('setting.useIt'));
     expect(mockOnUseKey).toHaveBeenCalledWith('EOS_GENERATED_PUBLIC_KEY');

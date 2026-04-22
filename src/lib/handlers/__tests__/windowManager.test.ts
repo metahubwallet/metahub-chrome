@@ -91,7 +91,10 @@ describe('windowManager', () => {
 
       await new Promise((r) => setTimeout(r, 0));
 
-      expect(chrome.storage.session.set).not.toHaveBeenCalled();
+      // session.set is still called to persist pendingWindowId; just not with windowParams.
+      expect(chrome.storage.session.set).not.toHaveBeenCalledWith(
+        expect.objectContaining({ windowParams: expect.anything() })
+      );
     });
   });
 
@@ -122,9 +125,15 @@ describe('windowManager', () => {
     });
 
     it('should do nothing for unknown windowId', async () => {
+      vi.mocked(chrome.storage.session.get as any).mockResolvedValue({
+        pendingWindowId: 1, // different id — closeWindow(999) should no-op
+      });
+
       await closeWindow(999);
-      // no error thrown
-      expect(chrome.storage.session.get).not.toHaveBeenCalled();
+
+      // Only the initial read for pendingWindowId; no set or remove follows.
+      expect(chrome.storage.session.set).not.toHaveBeenCalled();
+      expect(chrome.storage.session.remove).not.toHaveBeenCalled();
     });
   });
 });

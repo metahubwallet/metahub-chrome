@@ -72,16 +72,6 @@ vi.mock('@/utils/network', () => ({
   getNetworkLocalIcon: vi.fn(() => '/icon.png'),
 }));
 
-vi.mock('@/components/PopupBottom', () => ({
-  default: ({ isOpen, children, title }: any) =>
-    isOpen ? (
-      <div data-testid="popup-bottom">
-        <div>{title}</div>
-        {children}
-      </div>
-    ) : null,
-}));
-
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick }: any) => (
     <button onClick={onClick}>{children}</button>
@@ -98,14 +88,15 @@ describe('AccountSelector', () => {
     vi.clearAllMocks();
   });
 
-  it('renders nothing when closed', () => {
-    renderWithRouter(<AccountSelector isOpen={false} onClose={vi.fn()} />);
-    expect(screen.queryByTestId('popup-bottom')).not.toBeInTheDocument();
+  it('renders hidden (translated off-screen) when closed', () => {
+    const { container } = renderWithRouter(<AccountSelector isOpen={false} onClose={vi.fn()} />);
+    expect(container.querySelector('.translate-y-full')).toBeInTheDocument();
   });
 
-  it('renders when open', () => {
-    renderWithRouter(<AccountSelector isOpen={true} onClose={vi.fn()} />);
-    expect(screen.getByTestId('popup-bottom')).toBeInTheDocument();
+  it('renders visible when open', () => {
+    const { container } = renderWithRouter(<AccountSelector isOpen={true} onClose={vi.fn()} />);
+    expect(container.querySelector('.translate-y-0')).toBeInTheDocument();
+    expect(screen.getByText('auth.chooseAccount')).toBeInTheDocument();
   });
 
   it('displays network tabs', () => {
@@ -131,8 +122,9 @@ describe('AccountSelector', () => {
 
   it('locks wallet and closes on lock button click', async () => {
     const onClose = vi.fn();
-    renderWithRouter(<AccountSelector isOpen={true} onClose={onClose} />);
-    const lockBtn = screen.getByTitle('password.lock');
+    const { container } = renderWithRouter(<AccountSelector isOpen={true} onClose={onClose} />);
+    // Lock button is the first button in the title bar (leading a Lock icon).
+    const lockBtn = container.querySelector('.h-14 > button') as HTMLElement;
     fireEvent.click(lockBtn);
     await waitFor(() => {
       expect(mockSetLocked).toHaveBeenCalled();

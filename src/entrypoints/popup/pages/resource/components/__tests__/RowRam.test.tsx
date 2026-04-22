@@ -83,14 +83,16 @@ describe('RowRam', () => {
 
   it('renders progress bar with usage info', () => {
     renderComponent();
-    expect(screen.getByText('resource.used')).toBeInTheDocument();
-    expect(screen.getByText(/32\.00 KB \/ 64\.00 KB/)).toBeInTheDocument();
+    expect(screen.getByText('resource.used (K)')).toBeInTheDocument();
+    expect(screen.getByText('32.00')).toBeInTheDocument();
+    expect(screen.getByText('/ 64.00')).toBeInTheDocument();
   });
 
   it('renders RAM price', () => {
     renderComponent();
-    expect(screen.getByText('resource.price')).toBeInTheDocument();
-    expect(screen.getByText(/0\.1234 EOS\/KB/)).toBeInTheDocument();
+    expect(screen.getByText('resource.price (K)')).toBeInTheDocument();
+    expect(screen.getByText('0.1234')).toBeInTheDocument();
+    expect(screen.getAllByText('EOS').length).toBeGreaterThan(0);
   });
 
   it('renders Buy and Sell buttons', () => {
@@ -140,14 +142,14 @@ describe('RowRam', () => {
   });
 
   it('closes modal on cancel', async () => {
-    renderComponent();
+    const { container } = renderComponent();
     await userEvent.click(screen.getByText('resource.buy'));
     await waitFor(() => {
-      expect(screen.getByText('resource.buy resource.ram')).toBeInTheDocument();
+      expect(container.querySelector('.translate-y-0')).toBeInTheDocument();
     });
     await userEvent.click(screen.getByText('public.cancel'));
     await waitFor(() => {
-      expect(screen.queryByText('resource.buy resource.ram')).not.toBeInTheDocument();
+      expect(container.querySelector('.translate-y-full')).toBeInTheDocument();
     });
   });
 });

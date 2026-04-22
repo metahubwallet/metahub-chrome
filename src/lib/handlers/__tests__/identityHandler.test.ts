@@ -147,7 +147,7 @@ describe('identityHandler', () => {
         chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
       };
       const result = await getIdentity(payload as any);
-      expect(createWindow).toHaveBeenCalledWith('login', 450, 600, payload);
+      expect(createWindow).toHaveBeenCalledWith('login', 450, 630, payload);
       expect(localCache.set).toHaveBeenCalled();
     });
 

@@ -1,5 +1,17 @@
 import '@testing-library/jest-dom';
 
+// Mock the i18n singleton so tests importing modules that transitively init
+// i18n (via @/i18n -> react-i18next.initReactI18next) don't blow up.
+vi.mock('@/i18n', () => ({
+  default: {
+    t: (key: string) => key,
+    use: () => ({ init: () => undefined }),
+    init: () => undefined,
+    changeLanguage: () => Promise.resolve(),
+    language: 'en',
+  },
+}));
+
 // Mock chrome API
 const chromeMock = {
   storage: {

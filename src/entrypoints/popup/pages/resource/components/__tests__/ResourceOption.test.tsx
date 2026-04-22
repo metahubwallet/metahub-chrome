@@ -30,7 +30,18 @@ vi.mock('@/hooks/useChainInstance', () => ({
 }));
 
 vi.mock('@/hooks/usePowupState', () => ({
-  usePowupState: () => ({ data: null }),
+  usePowupState: () => ({
+    data: {
+      cpu: { weight: '1.0', weight_ratio: '1', assumed_stake_weight: '1', adjusted_utilization: '0', utilization: '0', utilization_timestamp: 0, exponent: 1, decay_secs: 86400, min_price: '0.0001 EOS', max_price: '1.0000 EOS' },
+      net: { weight: '1.0', weight_ratio: '1', assumed_stake_weight: '1', adjusted_utilization: '0', utilization: '0', utilization_timestamp: 0, exponent: 1, decay_secs: 86400, min_price: '0.0001 EOS', max_price: '1.0000 EOS' },
+      powerup_days: 1,
+      min_powerup_fee: '0.0001 EOS',
+    },
+  }),
+}));
+
+vi.mock('@/lib/powerup', () => ({
+  powerup: () => ({ max_payment: '0.1000 EOS', payer: 'alice', receiver: 'alice', days: 1, net_frac: '0', cpu_frac: '0' }),
 }));
 
 vi.mock('@/stores/walletStore', () => ({
@@ -104,7 +115,7 @@ describe('ResourceOption', () => {
   describe('Stake mode', () => {
     it('renders stake title', () => {
       renderComponent('stake');
-      expect(screen.getByText('resource.stakeresource.resources')).toBeInTheDocument();
+      expect(screen.getByText('resource.stake resource.resources')).toBeInTheDocument();
     });
 
     it('renders receiver field in stake mode', () => {
@@ -143,7 +154,7 @@ describe('ResourceOption', () => {
   describe('Unstake mode', () => {
     it('renders unstake title', () => {
       renderComponent('refund');
-      expect(screen.getByText('resource.unstakeresource.resources')).toBeInTheDocument();
+      expect(screen.getByText('resource.unstake resource.resources')).toBeInTheDocument();
     });
 
     it('does not render receiver field in unstake mode', () => {
@@ -170,7 +181,7 @@ describe('ResourceOption', () => {
   describe('Rent mode', () => {
     it('renders rent title', () => {
       renderComponent('rent');
-      expect(screen.getByText('resource.rentresource.resources')).toBeInTheDocument();
+      expect(screen.getByText('resource.rent resource.resources')).toBeInTheDocument();
     });
 
     it('renders receiver field in rent mode', () => {
@@ -200,7 +211,8 @@ describe('ResourceOption', () => {
   });
 
   it('does not render when isOpen is false', () => {
-    renderComponent('stake', false);
-    expect(screen.queryByText('resource.stakeresource.resources')).not.toBeInTheDocument();
+    const { container } = renderComponent('stake', false);
+    // Sheet content should be hidden via translate-y-full class
+    expect(container.querySelector('.translate-y-full')).toBeInTheDocument();
   });
 });

@@ -97,15 +97,16 @@ describe('TransactionPage', () => {
     (chrome.storage.session.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       windowParams: multiParams,
     });
-    render(<TransactionPage />);
+    const { container } = render(<TransactionPage />);
     await waitFor(() => {
       expect(screen.getByText('auth.joinWhitelist')).toBeInTheDocument();
     });
-    const checkbox = screen.getByRole('checkbox');
-    fireEvent.click(checkbox);
-    // Should not stay checked for multiple actions
+    // Checkbox is now a styled span; click label text to toggle
+    fireEvent.click(screen.getByText('auth.joinWhitelist'));
+    // Should not stay checked for multiple actions — inner checkmark svg absent
     await waitFor(() => {
-      expect(checkbox).not.toBeChecked();
+      const checkmark = container.querySelector('span.bg-\\[\\#7C3AED\\]');
+      expect(checkmark).not.toBeInTheDocument();
     });
   });
 
@@ -142,14 +143,15 @@ describe('TransactionPage', () => {
     (chrome.storage.session.get as ReturnType<typeof vi.fn>).mockResolvedValue({
       windowParams: singleActionParams,
     });
-    render(<TransactionPage />);
+    const { container } = render(<TransactionPage />);
     await waitFor(() => {
       expect(screen.getByText('auth.joinWhitelist')).toBeInTheDocument();
     });
-    const checkbox = screen.getByRole('checkbox');
-    fireEvent.click(checkbox);
+    // Checkbox is a styled span — click its label text
+    fireEvent.click(screen.getByText('auth.joinWhitelist'));
     await waitFor(() => {
-      expect(checkbox).toBeChecked();
+      const checkmark = container.querySelector('span.bg-\\[\\#7C3AED\\]');
+      expect(checkmark).toBeInTheDocument();
     });
     fireEvent.click(screen.getByText('auth.submit'));
     await waitFor(() => {

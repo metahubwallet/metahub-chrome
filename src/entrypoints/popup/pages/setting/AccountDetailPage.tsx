@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useWalletStore } from '@/stores/walletStore';
 import { getChainInstance } from '@/hooks/useChainInstance';
 import { isV3Encrypted, decryptV3, makeKeySalt, legacyDecrypt, legacyMd5, legacyPassword1 } from '@/utils/crypto';
-import { isValidPublic, publicKeyToLegacy } from '@/lib/keyring';
+import { isValidPublic, publicKeyToLegacy, privateKeyToNew, privateKeyToLegacy } from '@/lib/keyring';
 import { Permission } from '@/types/eos';
 import {
   Dialog,
@@ -55,6 +55,7 @@ const AccountDetailPage: React.FC = () => {
   const [allPerms, setAllPerms] = React.useState<Permission[]>([]);
   const [showPrivateKey, setShowPrivateKey] = React.useState<0 | 1 | 2>(0);
   const [showKeyText, setShowKeyText] = React.useState('');
+  const [showKeyLegacy, setShowKeyLegacy] = React.useState(false);
   const [removeKeyInfo, setRemoveKeyInfo] = React.useState<{ key: string; perm: string } | null>(null);
   const [showRemoveConfirm, setShowRemoveConfirm] = React.useState(false);
   const [showDestroyConfirm, setShowDestroyConfirm] = React.useState(false);
@@ -143,6 +144,7 @@ const AccountDetailPage: React.FC = () => {
   const viewPrivateKey = (key: string) => {
     setShowPrivateKey(1);
     setShowKeyText(key);
+    setShowKeyLegacy(false);
   };
 
   const confirmViewPrivateKey = async (password: string) => {
@@ -320,21 +322,37 @@ const AccountDetailPage: React.FC = () => {
       {/* Show Private Key */}
       <Dialog
         open={showPrivateKey === 2}
-        onOpenChange={(open) => { if (!open) { setShowPrivateKey(0); setShowKeyText(''); } }}
+        onOpenChange={(open) => { if (!open) { setShowPrivateKey(0); setShowKeyText(''); setShowKeyLegacy(false); } }}
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('setting.showKey')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600 mb-1">{t('public.privateKey')}</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm text-gray-600">{t('public.privateKey')}</p>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="inline-flex p-1 text-[#6B7280] hover:text-[#374151] cursor-pointer"
+                title={showKeyLegacy ? 'PVT_K1_ format' : 'WIF format'}
+                onClick={() => setShowKeyLegacy((v) => !v)}
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+              </button>
+              <ClipButton
+                value={showKeyLegacy ? privateKeyToLegacy(showKeyText) : privateKeyToNew(showKeyText)}
+                className="p-1"
+              />
+            </div>
+          </div>
           <Textarea
-            value={showKeyText}
+            value={showKeyLegacy ? privateKeyToLegacy(showKeyText) : privateKeyToNew(showKeyText)}
             readOnly
             rows={4}
             className="resize-none"
           />
           <DialogFooter>
-            <Button onClick={() => { setShowPrivateKey(0); setShowKeyText(''); }}>
+            <Button onClick={() => { setShowPrivateKey(0); setShowKeyText(''); setShowKeyLegacy(false); }}>
               {t('public.ok')}
             </Button>
           </DialogFooter>

@@ -81,10 +81,19 @@ vi.mock('@/stores/walletStore', () => ({
 vi.mock('@/utils/crypto', () => ({
   decrypt: vi.fn(() => 'decryptedPrivateKey'),
   md5: vi.fn((v: string) => `md5:${v}`),
+  isV3Encrypted: vi.fn(() => false),
+  decryptV3: vi.fn(async () => 'decryptedPrivateKey'),
+  makeKeySalt: vi.fn(() => 'salt'),
+  legacyDecrypt: vi.fn(() => 'decryptedPrivateKey'),
+  legacyMd5: vi.fn((v: string) => `md5:${v}`),
+  legacyPassword1: vi.fn((v: string) => `pw1:${v}`),
 }));
 
 vi.mock('@/lib/keyring', () => ({
-  isValidPublic: vi.fn((key: string) => key.startsWith('EOS')),
+  isValidPublic: vi.fn((key: string) => key.startsWith('EOS') || key.startsWith('PUB_')),
+  publicKeyToLegacy: vi.fn((key: string) => key),
+  privateKeyToNew: vi.fn((key: string) => `PVT_K1_${key}`),
+  privateKeyToLegacy: vi.fn((key: string) => `5${key}`),
 }));
 
 vi.mock('@tanstack/react-query', () => ({

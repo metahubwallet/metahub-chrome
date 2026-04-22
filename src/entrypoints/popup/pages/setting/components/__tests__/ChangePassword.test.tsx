@@ -51,6 +51,10 @@ vi.mock('@/utils/crypto', () => ({
   legacyPassword1: vi.fn((v: string) => `p1:${v}`),
 }));
 
+vi.mock('@/lib/keyring', () => ({
+  privateToPublic: vi.fn(() => 'EOSPUB'),
+}));
+
 vi.mock('@/components/PasswordInput', () => ({
   default: React.forwardRef(({ placeholder, value, onChange }: any, ref: any) => (
     <input type="password" placeholder={placeholder} value={value} onChange={onChange} ref={ref} />

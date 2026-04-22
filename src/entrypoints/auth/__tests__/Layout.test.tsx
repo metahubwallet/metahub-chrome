@@ -7,17 +7,15 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), warning: vi.fn(), error: vi.fn() } }));
+
 const mockVerifyAndUnlock = vi.fn();
 
-let mockIsLock = true;
+let mockPassword = '';
 
 vi.mock('@/stores/userStore', () => ({
   useUserStore: Object.assign(
-    vi.fn((selector: any) =>
-      selector({
-        isLock: () => mockIsLock,
-      })
-    ),
+    vi.fn((selector: any) => selector({ password: mockPassword })),
     {
       getState: vi.fn(() => ({
         verifyAndUnlock: mockVerifyAndUnlock,
@@ -31,7 +29,7 @@ import Layout from '../Layout';
 const OutletContent = () => <div data-testid="outlet-content">Outlet rendered</div>;
 
 const renderLayout = (locked: boolean) => {
-  mockIsLock = locked;
+  mockPassword = locked ? '' : 'unlocked';
   return render(
     <MemoryRouter initialEntries={['/login']}>
       <Routes>
@@ -55,9 +53,8 @@ describe('Layout', () => {
     expect(screen.getByText('password.unlock')).toBeInTheDocument();
   });
 
-  it('renders lock screen texts when locked', () => {
+  it('renders unlock tip when locked', () => {
     renderLayout(true);
-    expect(screen.getByText('password.inputPassword')).toBeInTheDocument();
     expect(screen.getByText('password.unlockTip')).toBeInTheDocument();
   });
 
@@ -67,7 +64,7 @@ describe('Layout', () => {
     expect(screen.queryByPlaceholderText('password.toUnlock')).not.toBeInTheDocument();
   });
 
-  it('shows warning when submitting empty password', async () => {
+  it('does not call verifyAndUnlock when submitting with empty password', async () => {
     renderLayout(true);
     fireEvent.click(screen.getByText('password.unlock'));
     await waitFor(() => {
@@ -75,7 +72,7 @@ describe('Layout', () => {
     });
   });
 
-  it('shows error when password is wrong', async () => {
+  it('calls verifyAndUnlock with entered password', async () => {
     mockVerifyAndUnlock.mockResolvedValue(false);
     renderLayout(true);
     const input = screen.getByPlaceholderText('password.toUnlock');
@@ -83,17 +80,6 @@ describe('Layout', () => {
     fireEvent.click(screen.getByText('password.unlock'));
     await waitFor(() => {
       expect(mockVerifyAndUnlock).toHaveBeenCalledWith('wrong');
-    });
-  });
-
-  it('calls verifyAndUnlock on correct password', async () => {
-    mockVerifyAndUnlock.mockResolvedValue(true);
-    renderLayout(true);
-    const input = screen.getByPlaceholderText('password.toUnlock');
-    fireEvent.change(input, { target: { value: 'correct' } });
-    fireEvent.click(screen.getByText('password.unlock'));
-    await waitFor(() => {
-      expect(mockVerifyAndUnlock).toHaveBeenCalledWith('correct');
     });
   });
 

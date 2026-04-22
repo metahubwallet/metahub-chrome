@@ -155,19 +155,22 @@ const RowRam: React.FC<RowRamProps> = ({ memory, ramprice, onRefresh }) => {
     const gb = mb / 1024;
     if (gb >= 1) return { value: gb.toFixed(2), unit: 'GB' };
     if (mb >= 1) return { value: mb.toFixed(2), unit: 'MB' };
-    return { value: kb.toFixed(2), unit: 'KB' };
+    if (kb >= 1) return { value: kb.toFixed(2), unit: 'KB' };
+    return { value: bytes.toFixed(0), unit: 'B' };
   };
 
   const ramTotal = formatBytes(memory.use_limit.max);
   const ramUsed = formatBytes(memory.use_limit.used);
   // Use the same unit as total for consistency
   const displayUnit = ramTotal.unit;
-  const divisor = displayUnit === 'GB' ? 1073741824 : displayUnit === 'MB' ? 1048576 : 1024;
-  const ramUsedDisplay = (memory.use_limit.used / divisor).toFixed(2);
-  const ramTotalDisplay = (memory.use_limit.max / divisor).toFixed(2);
+  const divisor =
+    displayUnit === 'GB' ? 1073741824 : displayUnit === 'MB' ? 1048576 : displayUnit === 'KB' ? 1024 : 1;
+  const ramUsedDisplay = (memory.use_limit.used / divisor).toFixed(displayUnit === 'B' ? 0 : 2);
+  const ramTotalDisplay = (memory.use_limit.max / divisor).toFixed(displayUnit === 'B' ? 0 : 2);
+  const shortUnit = displayUnit.charAt(0);
 
   return (
-    <div className="flex flex-col items-center gap-2 bg-white rounded-[22px] border border-[#E9E5F5] shadow-[0_6px_18px_rgba(46,16,101,0.03)] p-3 h-full text-[#52525B]">
+    <div className="flex flex-col items-center gap-2 bg-white rounded-[22px] border border-[#E9E5F5] shadow-[0_6px_18px_rgba(46,16,101,0.03)] py-3 px-0 h-full text-[#52525B]">
       <span className="text-[16px] font-bold text-[#27272A]">{t('resource.ram')}</span>
 
       {/* Vertical progress bar */}
@@ -177,16 +180,16 @@ const RowRam: React.FC<RowRamProps> = ({ memory, ramprice, onRefresh }) => {
 
       {/* Used stats */}
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[12px] font-medium text-[#8A82A4]">{t('resource.used')}</span>
+        <span className="text-[12px] font-medium text-[#8A82A4]">{t('resource.used')} ({shortUnit})</span>
         <div className="flex flex-row items-center gap-1">
           <span className="text-[12px] font-medium text-[#52525B]">{ramUsedDisplay}</span>
-          <span className="text-[12px] font-medium text-[#8A82A4]">/ {ramTotalDisplay} {displayUnit}</span>
+          <span className="text-[12px] font-medium text-[#8A82A4]">/ {ramTotalDisplay}</span>
         </div>
       </div>
 
       {/* Price */}
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[12px] font-medium text-[#8A82A4]">{t('resource.price')}</span>
+        <span className="text-[12px] font-medium text-[#8A82A4]">{t('resource.price')} (K)</span>
         <div className="flex flex-row items-center gap-1">
         <span className="text-[12px] font-medium text-[#52525B]">{ramprice.toFixed(4)}</span>
         <span className="text-[11px] font-medium text-[#8A82A4]">{currentSymbol}</span>
@@ -196,11 +199,11 @@ const RowRam: React.FC<RowRamProps> = ({ memory, ramprice, onRefresh }) => {
       {/* Action buttons */}
       <div className="flex flex-col gap-1.5 w-full">
         <button type="button" onClick={() => openModal('buyRam')}
-          className="h-8 w-full rounded-[12px] border border-[#E9D5FF] bg-white text-[12px] font-semibold text-[#3F3F46] flex items-center justify-center hover:bg-[#F5F0FF]">
+          className="h-8 mx-3 rounded-[12px] border border-[#E9D5FF] bg-white text-[12px] font-semibold text-[#3F3F46] flex items-center justify-center hover:bg-[#F5F0FF]">
           {t('resource.buy')}
         </button>
         <button type="button" onClick={() => openModal('sellRam')}
-          className="h-8 w-full rounded-[12px] border border-[#E9D5FF] bg-white text-[12px] font-semibold text-[#3F3F46] flex items-center justify-center hover:bg-[#F5F0FF]">
+          className="h-8 mx-3 rounded-[12px] border border-[#E9D5FF] bg-white text-[12px] font-semibold text-[#3F3F46] flex items-center justify-center hover:bg-[#F5F0FF]">
           {t('resource.sell')}
         </button>
       </div>

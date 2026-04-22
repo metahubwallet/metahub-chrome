@@ -235,7 +235,6 @@ export default defineUnlistedScript(() => {
       };
     }
 
-    // ScatterJS::Index::connect compat
     async connect(pluginName: string, opts: any) {
       if (pluginName) this.#appName = pluginName;
       if (opts?.network?.chainId) this.#chainId = opts.network.chainId;
@@ -257,6 +256,7 @@ export default defineUnlistedScript(() => {
           _ScatterJS = s;
         }
       },
+      configurable: false,
     });
   } catch {
     // ScatterJS already defined; dApps can reach us via window.metahub / window.scatter.
@@ -266,6 +266,7 @@ export default defineUnlistedScript(() => {
     Object.defineProperty(window, 'scatter', {
       get: () => metahub,
       set: () => {},
+      configurable: false,
     });
   } catch {
     // window.scatter already defined; skip.

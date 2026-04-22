@@ -22,6 +22,10 @@ vi.mock('@/stores/walletStore', () => ({
   useWalletStore: (selector?: Function) => {
     const state = {
       currentUserTokens: currentTokensFn,
+      getToken: (token: { symbol: string; contract: string; logo?: string }) => ({
+        ...token,
+        logo: token.logo || '',
+      }),
     };
     return selector ? selector(state) : state;
   },
@@ -110,9 +114,11 @@ describe('SelectCoin', () => {
     });
   });
 
-  it('does not render when isOpen is false', () => {
-    setup({ isOpen: false });
-    expect(screen.queryByText('EOS')).not.toBeInTheDocument();
+  it('hides the sheet (pointer-events-none) when isOpen is false', () => {
+    const { container } = setup({ isOpen: false });
+    // Sheet stays mounted but is translated off-screen and pointer-events disabled.
+    const backdropWrapper = container.querySelector('.pointer-events-none');
+    expect(backdropWrapper).toBeInTheDocument();
   });
 
   it('renders header labels', () => {

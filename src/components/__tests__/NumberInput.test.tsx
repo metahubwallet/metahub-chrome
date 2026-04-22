@@ -5,13 +5,13 @@ import NumberInput from '@/components/NumberInput';
 describe('NumberInput', () => {
   it('renders with the given value', () => {
     render(<NumberInput value={42} />);
-    const input = screen.getByRole('spinbutton') as HTMLInputElement;
+    const input = screen.getByRole('textbox') as HTMLInputElement;
     expect(input.value).toBe('42');
   });
 
   it('renders with defaultValue', () => {
     render(<NumberInput defaultValue={10} />);
-    const input = screen.getByRole('spinbutton') as HTMLInputElement;
+    const input = screen.getByRole('textbox') as HTMLInputElement;
     expect(input.value).toBe('10');
   });
 

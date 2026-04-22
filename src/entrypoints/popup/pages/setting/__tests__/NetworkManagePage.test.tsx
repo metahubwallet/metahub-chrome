@@ -115,12 +115,12 @@ describe('NetworkManagePage', () => {
   it('navigates to network-add on add existing click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.addExistingNetwork'));
-    expect(mockNavigate).toHaveBeenCalledWith('/network-add');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/network-add');
   });
 
   it('navigates to network-add-custom on custom click', () => {
     renderPage();
     fireEvent.click(screen.getByText('setting.addCustomNetwork'));
-    expect(mockNavigate).toHaveBeenCalledWith('/network-add-custom');
+    expect(mockNavigate).toHaveBeenCalledWith('/setting/network-add-custom');
   });
 });

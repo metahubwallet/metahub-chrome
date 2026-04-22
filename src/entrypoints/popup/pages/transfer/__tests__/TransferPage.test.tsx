@@ -44,6 +44,10 @@ vi.mock('@/stores/walletStore', () => ({
         { symbol: 'EOS', contract: 'eosio.token', precision: 4, amount: 10, chain: 'eos' },
         { symbol: 'USDT', contract: 'tethertether', precision: 4, amount: 5, chain: 'eos' },
       ],
+      getToken: (token: { symbol: string; contract: string; logo?: string }) => ({
+        ...token,
+        logo: token.logo || '',
+      }),
       recentTransfers: [],
       addRecentTransfer: vi.fn().mockResolvedValue(undefined),
     };
@@ -109,8 +113,8 @@ describe('TransferPage', () => {
   it('renders sender field as readonly with current wallet name', () => {
     renderPage();
     expect(screen.getByText('wallet.paymentAccount')).toBeInTheDocument();
-    const input = screen.getByDisplayValue(/alice/i);
-    expect(input).toBeDisabled();
+    // Sender is rendered as a span, not an input.
+    expect(screen.getAllByText(/alice/i).length).toBeGreaterThan(0);
   });
 
   it('renders receiver input label', () => {
@@ -120,7 +124,8 @@ describe('TransferPage', () => {
 
   it('renders amount section label', () => {
     renderPage();
-    expect(screen.getByText('wallet.amount')).toBeInTheDocument();
+    // The amount label appears in both the main page and the confirm sheet.
+    expect(screen.getAllByText('wallet.amount').length).toBeGreaterThan(0);
   });
 
   it('renders token symbol button', () => {
@@ -139,8 +144,8 @@ describe('TransferPage', () => {
 
   it('renders Memo field label', () => {
     renderPage();
-    // Memo label text contains "wallet.remark" — use getAllByText since confirm panel may also have it
-    const memoLabels = screen.getAllByText(/wallet\.remark/);
+    // Memo label is hardcoded literal "Memo"
+    const memoLabels = screen.getAllByText(/Memo/);
     expect(memoLabels.length).toBeGreaterThan(0);
   });
 
@@ -198,8 +203,8 @@ describe('TransferPage', () => {
     await userEvent.click(allBtn);
     // After clicking "All", the amount input should contain the max amount (10)
     await waitFor(() => {
-      const numInputs = document.querySelectorAll('input[type="number"]');
-      const hasMax = Array.from(numInputs).some(
+      const inputs = document.querySelectorAll('input[inputmode="decimal"]');
+      const hasMax = Array.from(inputs).some(
         (el) => (el as HTMLInputElement).value === '10',
       );
       expect(hasMax).toBe(true);

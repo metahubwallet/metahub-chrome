@@ -89,15 +89,15 @@ describe('RechargePage', () => {
 
   it('renders four amount preset cards', () => {
     renderPage();
-    expect(screen.getByText('resource.rechargeTab1')).toBeInTheDocument();
-    expect(screen.getByText('resource.rechargeTab2')).toBeInTheDocument();
-    expect(screen.getByText('resource.rechargeTab3')).toBeInTheDocument();
-    expect(screen.getByText('resource.rechargeTab4')).toBeInTheDocument();
+    expect(screen.getByText('30ms')).toBeInTheDocument();
+    expect(screen.getByText('150ms')).toBeInTheDocument();
+    expect(screen.getByText('300ms')).toBeInTheDocument();
+    expect(screen.getByText('900ms')).toBeInTheDocument();
   });
 
   it('selects a different amount when a card is clicked', async () => {
     renderPage();
-    const card05 = screen.getByText('resource.rechargeTab2');
+    const card05 = screen.getByText('150ms');
     await userEvent.click(card05);
     // The card should now be selected (has a highlighted style)
     // Just check it can be clicked without error
@@ -115,7 +115,7 @@ describe('RechargePage', () => {
     const otherLabel = screen.getByText('resource.otherAccount');
     await userEvent.click(otherLabel);
     await waitFor(() => {
-      const input = screen.getByPlaceholderText('resource.stakeReceiver');
+      const input = screen.getByPlaceholderText('resource.resourceReceiver');
       expect(input).toBeInTheDocument();
     });
   });
@@ -129,7 +129,7 @@ describe('RechargePage', () => {
     const selfLabel = screen.getByText('resource.currentAccount');
     await userEvent.click(selfLabel);
     await waitFor(() => {
-      expect(screen.queryByPlaceholderText('resource.stakeReceiver')).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('resource.resourceReceiver')).not.toBeInTheDocument();
     });
   });
 

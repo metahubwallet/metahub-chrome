@@ -47,13 +47,14 @@ vi.mock('@/lib/keyring', () => ({
 
 // Mock remote
 vi.mock('@/lib/remote', () => ({
-  getKeyAccounts: vi.fn().mockResolvedValue(['alice']),
+  queryKeyAccountsWithFallback: vi.fn().mockResolvedValue(['alice']),
+  getEndpoints: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock chain
 vi.mock('@/lib/chain', () => ({
   default: {
-    getApi: vi.fn(() => ({ getKeyAccounts: vi.fn().mockResolvedValue([]) })),
+    getApi: vi.fn(() => ({})),
     fetchPermissions: vi.fn().mockResolvedValue(undefined),
   },
 }));
@@ -108,6 +109,8 @@ const setupMocks = () => {
   (useChainStore as any).getState = vi.fn(() => ({
     networks,
     findNetwork: (chainId: string) => networks.find((n) => n.chainId === chainId) || networks[0],
+    selectedRpc: (_chainId: string) => 'https://eos.greymass.com',
+    customRpcs: {},
   }));
 
   mockWalletStore.mockImplementation((selector: any) =>
@@ -153,7 +156,7 @@ describe('ImportKeyPage', () => {
 
   it('renders import button', () => {
     renderWithRouter(<ImportKeyPage />);
-    expect(screen.getByText('public.importKey')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'public.importKey' })).toBeInTheDocument();
   });
 
   it('shows warning when protocol is unchecked on submit', async () => {
@@ -162,7 +165,7 @@ describe('ImportKeyPage', () => {
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
 
-    const importBtn = screen.getByText('public.importKey');
+    const importBtn = screen.getByRole('button', { name: 'public.importKey' });
     fireEvent.click(importBtn);
 
     // Doesn't crash
@@ -176,7 +179,7 @@ describe('ImportKeyPage', () => {
     const textarea = screen.getByPlaceholderText('public.importKeyTip');
     fireEvent.change(textarea, { target: { value: 'INVALID_KEY' } });
 
-    const importBtn = screen.getByText('public.importKey');
+    const importBtn = screen.getByRole('button', { name: 'public.importKey' });
     fireEvent.click(importBtn);
 
     await waitFor(() => {

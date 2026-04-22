@@ -23,7 +23,7 @@ export function privateToPublic(privateKey: string): string {
 // 获取新私钥公钥
 export async function getRandomKeyPair() {
     const priv = PrivateKey.generate('K1');
-    const privateKey = priv.toWif();
+    const privateKey = priv.toString();
     const publicKey = priv.toPublic().toString();
     return { privateKey, publicKey };
 }
@@ -34,6 +34,24 @@ export function publicKeyToLegacy(publicKey: string): string {
         return PublicKey.from(publicKey).toLegacyString();
     } catch {
         return publicKey;
+    }
+}
+
+// 私钥转 PVT_K1_ 新格式
+export function privateKeyToNew(privateKey: string): string {
+    try {
+        return PrivateKey.from(privateKey).toString();
+    } catch {
+        return privateKey;
+    }
+}
+
+// 私钥转 5 开头 WIF 旧格式
+export function privateKeyToLegacy(privateKey: string): string {
+    try {
+        return PrivateKey.from(privateKey).toWif();
+    } catch {
+        return privateKey;
     }
 }
 

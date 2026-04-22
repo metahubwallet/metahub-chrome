@@ -113,7 +113,7 @@ describe('ResourcePage', () => {
   it('renders smooth mode toggle on EOS mainnet', () => {
     renderPage();
     expect(screen.getByText('resource.smoothMode')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
   });
 
   it('displays smooth mode CPU time', () => {
@@ -144,11 +144,13 @@ describe('ResourcePage', () => {
 
   it('toggles smooth mode when switch is clicked', async () => {
     renderPage();
-    const toggle = screen.getByRole('checkbox');
+    // Smooth mode Switch is the one adjacent to "resource.smoothMode" text.
+    const smoothText = screen.getByText('resource.smoothMode');
+    const smoothCard = smoothText.closest('div')!.parentElement!;
+    const toggle = smoothCard.querySelector('input[type="checkbox"]') as HTMLInputElement;
     expect(toggle).toBeInTheDocument();
     await userEvent.click(toggle);
-    // After clicking, the checkbox should be checked
-    expect((toggle as HTMLInputElement).checked).toBe(true);
+    expect(toggle.checked).toBe(true);
   });
 
   it('navigates to recharge when recharge link is clicked', async () => {

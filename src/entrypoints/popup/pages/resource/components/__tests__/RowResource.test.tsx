@@ -130,7 +130,8 @@ describe('RowResource', () => {
 
   it('does not render refund section when no refund pending', () => {
     renderComponent('cpu');
-    expect(screen.queryByText('resource.refunding')).not.toBeInTheDocument();
+    // Refund hourglass button should not be rendered (it has aria-label of resource.refunding)
+    expect(screen.queryByRole('button', { name: 'resource.refunding' })).not.toBeInTheDocument();
   });
 
   it('renders refund section when refund is pending', () => {

@@ -15,24 +15,26 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('@/stores/chainStore', () => ({
-  useChainStore: vi.fn((selector: any) =>
-    selector({
-      findNetwork: () => ({ name: 'EOS Mainnet', chain: 'eos', chainId: 'test-chain-id', endpoint: 'https://eos.greymass.com' }),
-      selectedRpc: () => 'https://eos.greymass.com',
-      setSelectedRpc: vi.fn(),
-      customRpcs: {},
-      setCustomRpcs: vi.fn(),
-    })
-  ),
-}));
+vi.mock('@/stores/chainStore', () => {
+  const stableState = {
+    findNetwork: () => ({ name: 'EOS Mainnet', chain: 'eos', chainId: 'test-chain-id', endpoint: 'https://eos.greymass.com' }),
+    selectedRpcs: { 'test-chain-id': 'https://eos.greymass.com' },
+    setSelectedRpc: vi.fn(),
+    customRpcs: {},
+    setCustomRpcs: vi.fn(),
+  };
+  return {
+    useChainStore: vi.fn((selector: any) => selector(stableState)),
+  };
+});
 
-vi.mock('@/hooks/useEndpoints', () => ({
-  useEndpoints: () => ({
-    data: [{ name: 'Greymass', endpoint: 'https://eos.greymass.com' }],
-    isLoading: false,
-  }),
-}));
+vi.mock('@/hooks/useEndpoints', () => {
+  const stableEndpoints = [{ name: 'Greymass', endpoint: 'https://eos.greymass.com' }];
+  const stableEndpointsResult = { data: stableEndpoints, isLoading: false };
+  return {
+    useEndpoints: () => stableEndpointsResult,
+  };
+});
 
 const mockTestHttpEndpoint = vi.fn().mockResolvedValue(undefined);
 const mockUpdateHttpEndpoint = vi.fn();

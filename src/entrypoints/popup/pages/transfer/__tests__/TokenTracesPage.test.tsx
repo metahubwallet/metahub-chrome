@@ -65,6 +65,10 @@ vi.mock('@/stores/walletStore', () => ({
           logo: '',
         },
       ],
+      getToken: (token: { symbol: string; contract: string; logo?: string }) => ({
+        ...token,
+        logo: token.logo || '',
+      }),
     };
     return selector ? selector(state) : state;
   },
@@ -105,13 +109,14 @@ describe('TokenTracesPage', () => {
 
   it('displays the token symbol', () => {
     renderPage();
-    expect(screen.getByText('EOS')).toBeInTheDocument();
+    // Symbol appears in header, balance row, and swap dialog — use getAllByText
+    expect(screen.getAllByText('EOS').length).toBeGreaterThan(0);
   });
 
   it('shows live balance from useBalance hook', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText(/8\.5/)).toBeInTheDocument();
+      expect(screen.getAllByText(/8\.5/).length).toBeGreaterThan(0);
     });
   });
 
