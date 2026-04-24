@@ -12,6 +12,11 @@ import { useChainStore } from '@/stores/chainStore';
 import { eosChainId } from '@/utils/network';
 import RowResource from '@/entrypoints/popup/pages/resource/components/RowResource';
 import RowRam from '@/entrypoints/popup/pages/resource/components/RowRam';
+import {
+  SystemContractProvider,
+  useSystemContract,
+  type SystemContractToken,
+} from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 export interface ResourceData {
   core_liquid_balance: string;
@@ -65,9 +70,15 @@ const ResourcePage: React.FC = () => {
   const selectedIndex = useWalletStore((s) => s.selectedIndex);
   const setWallets = useWalletStore((s) => s.setWallets);
   const currentChainId = useChainStore((s) => s.currentChainId());
-  const currentSymbol = useChainStore((s) => s.currentSymbol());
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
+  const { symbol: effectiveSymbol } = useSystemContract();
 
   const isEosMainnet = currentChainId === eosChainId;
+  const currentSymbol = isEosMainnet ? effectiveSymbol : chainSymbol;
+  const remapSymbol = React.useCallback(
+    (s: string) => (isEosMainnet ? s.replace(/\bEOS\b/g, effectiveSymbol) : s),
+    [isEosMainnet, effectiveSymbol]
+  );
 
   const [smoothMode, setSmoothMode] = React.useState<boolean>(
     () => currentWallet?.smoothMode ?? false
@@ -94,7 +105,7 @@ const ResourcePage: React.FC = () => {
 
     const emptyCoin = `0.0000 ${currentSymbol}`;
     const str = (v: unknown) => (v != null ? String(v) : '');
-    const coreLiquid = str(account.core_liquid_balance) || emptyCoin;
+    const coreLiquid = remapSymbol(str(account.core_liquid_balance) || emptyCoin);
 
     let stakeForOthersCPU = 0;
     let stakeForOthersNET = 0;
@@ -157,21 +168,21 @@ const ResourcePage: React.FC = () => {
       toLimit(account.cpu_limit),
       account.refund_request ? parseFloat(str(account.refund_request.cpu_amount)) : 0,
       account.refund_request ? parseFloat(str(account.refund_request.net_amount)) : 0,
-      str(account.total_resources?.cpu_weight) || emptyCoin,
-      str(account.self_delegated_bandwidth?.cpu_weight) || emptyCoin,
+      remapSymbol(str(account.total_resources?.cpu_weight) || emptyCoin),
+      remapSymbol(str(account.self_delegated_bandwidth?.cpu_weight) || emptyCoin),
       stakeForOthersCPU
     );
     const net = buildResource(
       toLimit(account.net_limit),
       account.refund_request ? parseFloat(str(account.refund_request.net_amount)) : 0,
       account.refund_request ? parseFloat(str(account.refund_request.cpu_amount)) : 0,
-      str(account.total_resources?.net_weight) || emptyCoin,
-      str(account.self_delegated_bandwidth?.net_weight) || emptyCoin,
+      remapSymbol(str(account.total_resources?.net_weight) || emptyCoin),
+      remapSymbol(str(account.self_delegated_bandwidth?.net_weight) || emptyCoin),
       stakeForOthersNET
     );
 
     return { cpu, net };
-  }, [resourceData, currentSymbol, currentWallet?.name]);
+  }, [resourceData, currentSymbol, currentWallet?.name, remapSymbol]);
 
   const ramMemory = React.useMemo<ResourceBase>(() => {
     if (!resourceData?.accountInfo) {
@@ -181,11 +192,13 @@ const ResourcePage: React.FC = () => {
     const ramQuota = Number(acc.ram_quota);
     const ramUsage = Number(acc.ram_usage);
     return {
-      core_liquid_balance: acc.core_liquid_balance ? String(acc.core_liquid_balance) : `0.0000 ${currentSymbol}`,
+      core_liquid_balance: acc.core_liquid_balance
+        ? remapSymbol(String(acc.core_liquid_balance))
+        : `0.0000 ${currentSymbol}`,
       use_percentage: ramQuota > 0 ? Math.floor((ramUsage / ramQuota) * 100) : 0,
       use_limit: { max: ramQuota, used: ramUsage },
     };
-  }, [resourceData, currentSymbol]);
+  }, [resourceData, currentSymbol, remapSymbol]);
 
   const ramprice = React.useMemo<number>(() => {
     if (!resourceData?.ramMarket) return 0;
@@ -251,19 +264,11 @@ const ResourcePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* External links */}
+              {/* Token toggle + external link */}
               <div className="flex flex-col gap-1.5 w-[108px] h-[90px]">
+                <SystemContractToggle />
                 <a
-                  href="https://eospowerup.io/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex flex-row items-center justify-between px-3 h-[41px] rounded-[22px] border border-[#EDE9FE] bg-white shadow-sm text-[13px] font-semibold text-[#3F3F46] hover:bg-[#F5F0FF]"
-                >
-                  <span>{t('resource.freeCPU')}</span>
-                  <ChevronRight className="h-3.5 w-3.5 text-[#52525B]" />
-                </a>
-                <a
-                  href="https://rex.tokenpocket.pro/#/"
+                  href="https://eoseyes.com/wallet#rex"
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-row items-center justify-between px-3 h-[41px] rounded-[22px] border border-[#EDE9FE] bg-white shadow-sm text-[13px] font-semibold text-[#3F3F46] hover:bg-[#F5F0FF]"
@@ -291,4 +296,49 @@ const ResourcePage: React.FC = () => {
   );
 };
 
-export default ResourcePage;
+const SystemContractToggle: React.FC = () => {
+  const { token, setToken } = useSystemContract();
+  const options: SystemContractToken[] = ['EOS', 'A'];
+  const activeIndex = options.indexOf(token);
+  return (
+    <div
+      className="relative flex items-center h-[41px] rounded-[22px] border border-[#EDE9FE] bg-white shadow-sm p-0.5"
+      role="tablist"
+      aria-label="Token contract selector"
+    >
+      <span
+        aria-hidden="true"
+        className="absolute top-0.5 bottom-0.5 left-0.5 rounded-[18px] bg-primary shadow-[0_1px_2px_rgba(46,16,101,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        style={{
+          width: `calc(50% - 2px)`,
+          transform: `translateX(${activeIndex * 100}%)`,
+        }}
+      />
+      {options.map((opt) => {
+        const active = token === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => setToken(opt)}
+            className={`relative z-10 flex-1 h-full rounded-[18px] text-[13px] font-bold cursor-pointer transition-colors duration-300 ${
+              active ? 'text-white' : 'text-[#6B7280] hover:text-[#3F3F46]'
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const ResourcePageWithProvider: React.FC = () => (
+  <SystemContractProvider>
+    <ResourcePage />
+  </SystemContractProvider>
+);
+
+export default ResourcePageWithProvider;

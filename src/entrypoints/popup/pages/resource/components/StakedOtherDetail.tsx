@@ -7,6 +7,7 @@ import PopupBottom from '@/components/PopupBottom';
 import { getChainInstance } from '@/hooks/useChainInstance';
 import { useWalletStore } from '@/stores/walletStore';
 import { useChainStore } from '@/stores/chainStore';
+import { useSystemContract } from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 interface StakedOtherDetailProps {
   isOpen: boolean;
@@ -33,6 +34,13 @@ const StakedOtherDetail: React.FC<StakedOtherDetailProps> = ({
   const chain = getChainInstance();
   const currentWallet = useWalletStore((s) => s.currentWallet());
   const currentChainId = useChainStore((s) => s.currentChainId());
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
+  const { contract: systemContract, symbol: tokenSymbol } = useSystemContract();
+  const isEosFamily = chainSymbol === 'EOS';
+  const remapSymbol = React.useCallback(
+    (s: string) => (isEosFamily ? s.replace(/\bEOS\b/g, tokenSymbol) : s),
+    [isEosFamily, tokenSymbol]
+  );
 
   const { data: stakeList = [] } = useQuery<StakeRow[]>({
     queryKey: ['delegatebwList', currentChainId, currentWallet?.name],
@@ -48,17 +56,25 @@ const StakedOtherDetail: React.FC<StakedOtherDetailProps> = ({
   }, [stakeList, currentWallet?.name]);
 
   const filteredRows = React.useMemo<StakeRow[]>(() => {
+    const zero = `0.0000 ${isEosFamily ? 'EOS' : chainSymbol}`;
     return otherRows.filter((row) => {
-      if (type === 'cpu') return row.cpu_weight !== '0.0000 EOS';
-      return row.net_weight !== '0.0000 EOS';
+      if (type === 'cpu') return row.cpu_weight !== zero;
+      return row.net_weight !== zero;
     });
-  }, [otherRows, type]);
+  }, [otherRows, type, isEosFamily, chainSymbol]);
 
   const unstakeMutation = useMutation({
     mutationFn: async (item: StakeRow) => {
       const api = chain.getApi(currentChainId);
       const auth = chain.getAuth();
-      return api.undelegatebw(item.from, item.to, item.net_weight, item.cpu_weight, auth);
+      return api.undelegatebw(
+        item.from,
+        item.to,
+        remapSymbol(item.net_weight),
+        remapSymbol(item.cpu_weight),
+        auth,
+        systemContract
+      );
     },
     onSuccess: () => {
       toast.success(t('resource.stakeSuccess'));
@@ -86,7 +102,7 @@ const StakedOtherDetail: React.FC<StakedOtherDetailProps> = ({
             >
               <span className="text-[15px] font-semibold text-gray-800">{item.to}:</span>
               <span className="text-[15px] font-semibold text-gray-500">
-                {type === 'cpu' ? item.cpu_weight : item.net_weight}
+                {remapSymbol(type === 'cpu' ? item.cpu_weight : item.net_weight)}
               </span>
               <Button
                 size="sm"

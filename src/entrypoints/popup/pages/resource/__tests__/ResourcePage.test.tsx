@@ -121,9 +121,14 @@ describe('ResourcePage', () => {
     expect(screen.getByText(/5 ms/)).toBeInTheDocument();
   });
 
-  it('renders free CPU external link', () => {
+  it('renders EOS/A system-contract toggle with EOS active by default', () => {
     renderPage();
-    expect(screen.getByText('resource.freeCPU')).toBeInTheDocument();
+    const eosTab = screen.getByRole('tab', { name: 'EOS' });
+    const aTab = screen.getByRole('tab', { name: 'A' });
+    expect(eosTab).toBeInTheDocument();
+    expect(aTab).toBeInTheDocument();
+    expect(eosTab).toHaveAttribute('aria-selected', 'true');
+    expect(aTab).toHaveAttribute('aria-selected', 'false');
   });
 
   it('renders trade REX external link', () => {

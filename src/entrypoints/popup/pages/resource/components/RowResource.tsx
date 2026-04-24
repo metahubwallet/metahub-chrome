@@ -12,6 +12,7 @@ import { ResourceData } from '@/entrypoints/popup/pages/resource/ResourcePage';
 import StakedDetail from '@/entrypoints/popup/pages/resource/components/StakedDetail';
 import StakedOtherDetail from '@/entrypoints/popup/pages/resource/components/StakedOtherDetail';
 import ResourceOption from '@/entrypoints/popup/pages/resource/components/ResourceOption';
+import { useSystemContract } from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 type Action = 'stake' | 'refund' | 'rent';
 
@@ -26,7 +27,10 @@ const RowResource: React.FC<RowResourceProps> = ({ type, resources, onRefresh })
   const chain = getChainInstance();
   const currentWallet = useWalletStore((s) => s.currentWallet());
   const currentChainId = useChainStore((s) => s.currentChainId());
-  const currentSymbol = useChainStore((s) => s.currentSymbol());
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
+  const { contract: systemContract, symbol: tokenSymbol } = useSystemContract();
+  const isEosMainnet = chainSymbol === 'EOS';
+  const currentSymbol = isEosMainnet ? tokenSymbol : chainSymbol;
 
   const [showStakedDetail, setShowStakedDetail] = React.useState(false);
   const [showStakedOtherDetail, setShowStakedOtherDetail] = React.useState(false);
@@ -59,7 +63,7 @@ const RowResource: React.FC<RowResourceProps> = ({ type, resources, onRefresh })
     mutationFn: async () => {
       const api = chain.getApi(currentChainId);
       const auth = chain.getAuth();
-      return api.refund(currentWallet?.name, auth);
+      return api.refund(currentWallet?.name, auth, systemContract);
     },
     onSuccess: () => {
       toast.success(t('resource.stakeSuccess'));

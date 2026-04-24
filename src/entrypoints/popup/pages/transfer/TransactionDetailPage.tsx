@@ -112,16 +112,16 @@ const TransactionDetailPage: React.FC = () => {
               label="vaultascan"
             />
             <ExplorerLink
+              href={`https://eoseyes.com/tx/${trx.trx_id}`}
+              label="eoseyes"
+            />
+            <ExplorerLink
               href={`https://eosauthority.com/transaction/${trx.trx_id}`}
               label="eosauthority"
             />
             <ExplorerLink
               href={`https://eosflare.io/tx/${trx.trx_id}`}
               label="eosflare"
-            />
-            <ExplorerLink
-              href={`https://eoseyes.com/tx/${trx.trx_id}`}
-              label="eoseyes"
             />
           </div>
         </div>

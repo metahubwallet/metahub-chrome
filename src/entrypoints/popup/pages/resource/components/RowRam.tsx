@@ -11,6 +11,7 @@ import { getChainInstance } from '@/hooks/useChainInstance';
 import { useWalletStore } from '@/stores/walletStore';
 import { useChainStore } from '@/stores/chainStore';
 import { ResourceBase } from '@/entrypoints/popup/pages/resource/ResourcePage';
+import { useSystemContract } from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 interface RowRamProps {
   memory: ResourceBase;
@@ -26,8 +27,10 @@ const RowRam: React.FC<RowRamProps> = ({ memory, ramprice, onRefresh }) => {
   const chain = getChainInstance();
   const currentWallet = useWalletStore((s) => s.currentWallet());
   const currentChainId = useChainStore((s) => s.currentChainId());
-  const currentSymbol = useChainStore((s) => s.currentSymbol());
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
   const currentNetwork = useChainStore((s) => s.currentNetwork);
+  const { contract: systemContract, symbol: tokenSymbol } = useSystemContract();
+  const currentSymbol = chainSymbol === 'EOS' ? tokenSymbol : chainSymbol;
 
   const [modalVisible, setModalVisible] = React.useState(false);
   const [action, setAction] = React.useState<RamAction>('buyRam');
@@ -125,15 +128,15 @@ const RowRam: React.FC<RowRamProps> = ({ memory, ramprice, onRefresh }) => {
       if (action === 'buyRam') {
         if (buyUnit === 'bytes') {
           const bytes = Math.floor(inputValue);
-          if (bytes <= 15) throw new Error(t('resource.valueSizeError'));
-          return api.buyRamBytes(currentWallet?.name, receiver, bytes, auth);
+          if (bytes < 1) throw new Error(t('resource.valueSizeError'));
+          return api.buyRamBytes(currentWallet?.name, receiver, bytes, auth, systemContract);
         }
         const value = `${inputValue.toFixed(precision)} ${currentSymbol}`;
-        return api.buyRam(currentWallet?.name, receiver, value, auth);
+        return api.buyRam(currentWallet?.name, receiver, value, auth, systemContract);
       } else {
         const bytes = Math.floor(inputValue);
-        if (bytes <= 15) throw new Error(t('resource.valueSizeError'));
-        return api.sellRam(currentWallet?.name, bytes, auth);
+        if (bytes < 1) throw new Error(t('resource.valueSizeError'));
+        return api.sellRam(currentWallet?.name, bytes, auth, systemContract);
       }
     },
     onSuccess: () => {

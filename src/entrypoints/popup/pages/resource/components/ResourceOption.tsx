@@ -14,6 +14,7 @@ import { useWalletStore } from '@/stores/walletStore';
 import { useChainStore } from '@/stores/chainStore';
 import { powerup } from '@/lib/powerup';
 import { ResourceData } from '@/entrypoints/popup/pages/resource/ResourcePage';
+import { useSystemContract } from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 type Action = 'stake' | 'refund' | 'rent';
 
@@ -36,8 +37,10 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
   const chain = getChainInstance();
   const currentWallet = useWalletStore((s) => s.currentWallet());
   const currentChainId = useChainStore((s) => s.currentChainId());
-  const currentSymbol = useChainStore((s) => s.currentSymbol());
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
   const currentNetwork = useChainStore((s) => s.currentNetwork);
+  const { contract: systemContract, symbol: tokenSymbol } = useSystemContract();
+  const currentSymbol = chainSymbol === 'EOS' ? tokenSymbol : chainSymbol;
 
   const { data: powupStateData } = usePowupState({ enabled: action === 'rent' && isOpen });
 
@@ -61,10 +64,10 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
       if (action !== 'rent' || !powupStateData) return;
       const cpuQ = formatValue(cpu);
       const netQ = formatValue(net);
-      const params = powerup('', '', cpuQ, netQ, powupStateData);
+      const params = powerup('', '', cpuQ, netQ, powupStateData, currentSymbol);
       setEstimatedCost(params.max_payment);
     },
-    [action, formatValue, powupStateData]
+    [action, formatValue, powupStateData, currentSymbol]
   );
 
   React.useEffect(() => {
@@ -132,7 +135,8 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
           netQuantity,
           cpuQuantity,
           transfer,
-          auth
+          auth,
+          systemContract
         );
       } else if (action === 'refund') {
         return api.undelegatebw(
@@ -140,7 +144,8 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
           currentWallet?.name,
           netQuantity,
           cpuQuantity,
-          auth
+          auth,
+          systemContract
         );
       } else if (action === 'rent') {
         const params = powerup(
@@ -148,9 +153,10 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
           receiver,
           cpuQuantity,
           netQuantity,
-          powupStateData ?? null
+          powupStateData ?? null,
+          currentSymbol
         );
-        return api.powerup(params, auth);
+        return api.powerup(params, auth, systemContract);
       }
     },
     onSuccess: () => {
@@ -201,7 +207,7 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
               onChange={handleCpuChange}
               className="flex-1"
             />
-            <span className="text-sm text-gray-400">EOS</span>
+            <span className="text-sm text-gray-400">{currentSymbol}</span>
           </div>
         </div>
 
@@ -220,7 +226,7 @@ const ResourceOption: React.FC<ResourceOptionProps> = ({
               onChange={handleNetChange}
               className="flex-1"
             />
-            <span className="text-sm text-gray-400">EOS</span>
+            <span className="text-sm text-gray-400">{currentSymbol}</span>
           </div>
         </div>
 

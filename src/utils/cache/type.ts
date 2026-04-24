@@ -15,4 +15,5 @@ export type CacheKey =
     | 'userTokens'
     | 'recentTransfers'
     | 'autoLockTime'
+    | 'resourceSystemToken'
     ;

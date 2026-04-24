@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import PopupBottom from '@/components/PopupBottom';
+import { useChainStore } from '@/stores/chainStore';
 import { ResourceData } from '@/entrypoints/popup/pages/resource/ResourcePage';
+import { useSystemContract } from '@/entrypoints/popup/pages/resource/systemContractContext';
 
 interface StakedDetailProps {
   isOpen: boolean;
@@ -13,6 +15,9 @@ interface StakedDetailProps {
 const StakedDetail: React.FC<StakedDetailProps> = ({ isOpen, onClose, resources, type }) => {
   const { t } = useTranslation();
   const res = resources[type];
+  const chainSymbol = useChainStore((s) => s.currentSymbol());
+  const { symbol: tokenSymbol } = useSystemContract();
+  const currentSymbol = chainSymbol === 'EOS' ? tokenSymbol : chainSymbol;
 
   return (
     <PopupBottom isOpen={isOpen} title={t('resource.stakeInfo')} onClose={onClose}>
@@ -34,7 +39,7 @@ const StakedDetail: React.FC<StakedDetailProps> = ({ isOpen, onClose, resources,
             {t('resource.otherStake')}:
           </span>
           <span className="text-[15px] font-semibold text-gray-500 text-right">
-            {res.staked_for_user} EOS
+            {res.staked_for_user} {currentSymbol}
           </span>
         </div>
       </div>

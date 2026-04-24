@@ -325,10 +325,10 @@ export default class EOSApi {
     async delegatebw(
         from: string, receiver: string,
         stake_net_quantity = '0.0000 EOS', stake_cpu_quantity = '0.0000 EOS',
-        transfer = false, auth: Auth
+        transfer = false, auth: Auth, systemContract = 'eosio'
     ) {
         return this.transact(
-            this.buildSingleAction('eosio', 'delegatebw', auth, {
+            this.buildSingleAction(systemContract, 'delegatebw', auth, {
                 from, receiver, stake_net_quantity, stake_cpu_quantity, transfer: transfer ? 1 : 0,
             }),
             DEFAULT_TX_OPTIONS,
@@ -338,47 +338,47 @@ export default class EOSApi {
     async undelegatebw(
         from: string, receiver: string,
         unstake_net_quantity = '0.0000 EOS', unstake_cpu_quantity = '0.0000 EOS',
-        auth: Auth
+        auth: Auth, systemContract = 'eosio'
     ) {
         return this.transact(
-            this.buildSingleAction('eosio', 'undelegatebw', auth, {
+            this.buildSingleAction(systemContract, 'undelegatebw', auth, {
                 from, receiver, unstake_net_quantity, unstake_cpu_quantity,
             }),
             DEFAULT_TX_OPTIONS,
         );
     }
 
-    async refund(owner: string, auth: Auth) {
+    async refund(owner: string, auth: Auth, systemContract = 'eosio') {
         return this.transact(
-            this.buildSingleAction('eosio', 'refund', auth, { owner }),
+            this.buildSingleAction(systemContract, 'refund', auth, { owner }),
             DEFAULT_TX_OPTIONS,
         );
     }
 
-    async powerup(params: any, auth: Auth) {
+    async powerup(params: any, auth: Auth, systemContract = 'eosio') {
         return this.transact(
-            this.buildSingleAction('eosio', 'powerup', auth, params),
+            this.buildSingleAction(systemContract, 'powerup', auth, params),
             DEFAULT_TX_OPTIONS, true,
         );
     }
 
-    async buyRam(payer: string, receiver: string, quant: string, auth: Auth) {
+    async buyRam(payer: string, receiver: string, quant: string, auth: Auth, systemContract = 'eosio') {
         return this.transact(
-            this.buildSingleAction('eosio', 'buyram', auth, { payer, receiver, quant }),
+            this.buildSingleAction(systemContract, 'buyram', auth, { payer, receiver, quant }),
             DEFAULT_TX_OPTIONS,
         );
     }
 
-    async buyRamBytes(payer: string, receiver: string, bytes: number, auth: Auth) {
+    async buyRamBytes(payer: string, receiver: string, bytes: number, auth: Auth, systemContract = 'eosio') {
         return this.transact(
-            this.buildSingleAction('eosio', 'buyrambytes', auth, { payer, receiver, bytes }),
+            this.buildSingleAction(systemContract, 'buyrambytes', auth, { payer, receiver, bytes }),
             DEFAULT_TX_OPTIONS,
         );
     }
 
-    async sellRam(account: string, bytes: number, auth: Auth) {
+    async sellRam(account: string, bytes: number, auth: Auth, systemContract = 'eosio') {
         return this.transact(
-            this.buildSingleAction('eosio', 'sellram', auth, { account, bytes }),
+            this.buildSingleAction(systemContract, 'sellram', auth, { account, bytes }),
             DEFAULT_TX_OPTIONS,
         );
     }

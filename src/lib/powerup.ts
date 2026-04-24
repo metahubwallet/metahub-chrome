@@ -3,7 +3,8 @@ export function powerup(
     receiver: string,
     cpuQuantity: string = '',
     netQuantity: string = '',
-    powupState: any = null
+    powupState: any = null,
+    symbol: string = 'EOS'
 ) {
     const state = powupState ?? {};
     const cpuAmount = parseAmount(cpuQuantity);
@@ -24,7 +25,7 @@ export function powerup(
     }
 
     const totalFee = cpuFee + netFee;
-    const minFee = Number(parseAmount(state.min_powerup_fee || '0.0001 EOS'));
+    const minFee = Number(parseAmount(state.min_powerup_fee || `0.0001 ${symbol}`));
     // Buffer to cover JS float vs on-chain int64 rounding divergence, and enforce min fee.
     const paymentUnits = Math.max(minFee, Math.ceil(totalFee));
 
@@ -34,7 +35,7 @@ export function powerup(
         days: parseInt(state.powerup_days) || 1,
         net_frac: netFrac.toString(),
         cpu_frac: cpuFrac.toString(),
-        max_payment: formatAsset(paymentUnits),
+        max_payment: formatAsset(paymentUnits, symbol),
     };
 }
 
@@ -99,9 +100,9 @@ function parseAmount(quantity: string): bigint {
     return BigInt(digits);
 }
 
-// Format integer smallest-units back into "X.XXXX EOS"
-function formatAsset(units: number): string {
+// Format integer smallest-units back into "X.XXXX <SYMBOL>"
+function formatAsset(units: number, symbol: string = 'EOS'): string {
     const whole = Math.floor(units / 10000);
     const frac = String(units % 10000).padStart(4, '0');
-    return `${whole}.${frac} EOS`;
+    return `${whole}.${frac} ${symbol}`;
 }

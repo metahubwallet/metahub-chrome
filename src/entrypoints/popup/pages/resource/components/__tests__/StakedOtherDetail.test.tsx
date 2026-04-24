@@ -39,6 +39,7 @@ vi.mock('@/stores/chainStore', () => ({
   useChainStore: (selector?: Function) => {
     const state = {
       currentChainId: () => 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+      currentSymbol: () => 'EOS',
     };
     return selector ? selector(state) : state;
   },
@@ -147,7 +148,8 @@ describe('StakedOtherDetail', () => {
         'bob',
         '0.0000 EOS',
         '1.0000 EOS',
-        'alice@active'
+        'alice@active',
+        'eosio'
       );
     });
   });

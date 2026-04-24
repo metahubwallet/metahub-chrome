@@ -12,6 +12,9 @@ import SelectCoin from '@/entrypoints/popup/pages/transfer/components/SelectCoin
 import RecentTransfer from '@/entrypoints/popup/pages/transfer/components/RecentTransfer';
 import TransferConfirm from '@/entrypoints/popup/pages/transfer/components/TransferConfirm';
 import { TransferRecord } from '@/types/transaction';
+import placeholderImg from '@/assets/images/placeholder.png';
+
+type SelectedToken = Token & { logo?: string };
 
 interface TransferFormValues {
   receiver: string;
@@ -39,11 +42,12 @@ const TransferPage: React.FC = () => {
   const [receiverError, setReceiverError] = React.useState('');
   const [maxAmount, setMaxAmount] = React.useState(0);
   const [amountRaw, setAmountRaw] = React.useState('');
-  const [selectedToken, setSelectedToken] = React.useState<Token>({
+  const [selectedToken, setSelectedToken] = React.useState<SelectedToken>({
     symbol: '',
     contract: '',
     precision: 4,
   });
+  const getToken = useWalletStore((s) => s.getToken);
 
   const senderDisplay = React.useMemo(
     () => (currentWallet ? briefAccount(currentWallet.name, 14, 8) : ''),
@@ -66,7 +70,7 @@ const TransferPage: React.FC = () => {
     const qAmount = searchParams.get('amount');
     const networkToken = chainNetwork?.token;
 
-    const token: Token = {
+    const token: SelectedToken = {
       symbol: qSymbol || networkToken?.symbol || 'EOS',
       contract: qContract || networkToken?.contract || 'eosio.token',
       precision: Number(qPrecision) || networkToken?.precision || 4,
@@ -83,7 +87,12 @@ const TransferPage: React.FC = () => {
     );
     if (match) {
       token.precision = match.precision;
+      token.logo = match.logo;
       setMaxAmount(match.amount);
+    }
+    if (!token.logo) {
+      const catalog = getToken({ ...token, chain: '' });
+      if (catalog?.logo) token.logo = catalog.logo;
     }
 
     setSelectedToken(token);
@@ -169,10 +178,12 @@ const TransferPage: React.FC = () => {
   };
 
   const handleChangeToken = (coin: Balance) => {
-    const token: Token = {
+    const catalog = getToken(coin);
+    const token: SelectedToken = {
       symbol: coin.symbol,
       contract: coin.contract,
       precision: coin.precision,
+      logo: coin.logo || catalog?.logo,
     };
     setSelectedToken(token);
     setMaxAmount(coin.amount);
@@ -254,10 +265,26 @@ const TransferPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectTokenVisible(true)}
-                className="flex items-center gap-1 px-4 h-full bg-[#F0EAFF] rounded-l-2xl shrink-0 cursor-pointer"
+                className="flex items-center gap-2 px-3 h-full min-w-[110px] bg-[#F0EAFF] rounded-l-2xl shrink-0 cursor-pointer"
               >
-                <span className="text-[15px] font-semibold text-[#18181B]">{selectedToken.symbol}</span>
-                <ChevronDown className="h-4 w-4 text-[#6B7280]" />
+                {selectedToken.logo ? (
+                  <img
+                    className="w-6 h-6 rounded-full object-cover shrink-0"
+                    src={selectedToken.logo}
+                    alt={selectedToken.symbol}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = placeholderImg;
+                    }}
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-[11px] font-bold text-[#7C3AED] shrink-0">
+                    {selectedToken.symbol.charAt(0) || '?'}
+                  </div>
+                )}
+                <span className="flex-1 text-[15px] font-semibold text-[#18181B] text-left truncate">
+                  {selectedToken.symbol}
+                </span>
+                <ChevronDown className="h-4 w-4 text-[#6B7280] shrink-0" />
               </button>
 
               {/* Amount input */}
@@ -289,7 +316,7 @@ const TransferPage: React.FC = () => {
                         setAmountRaw(raw);
                       }
                     }}
-                    className="flex-1 h-full px-3 bg-transparent text-sm text-[#18181B] placeholder:text-[#A1A1AA] text-left outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="flex-1 min-w-0 h-full px-3 bg-transparent text-sm text-[#18181B] placeholder:text-[#A1A1AA] text-left outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 )}
               />
@@ -302,7 +329,7 @@ const TransferPage: React.FC = () => {
                   setAmountRaw(maxAmount > 0 ? String(maxAmount) : '');
                   checkQuantity(maxAmount);
                 }}
-                className="flex items-center px-[18px] h-full bg-[#F0EAFF] rounded-r-2xl shrink-0 cursor-pointer"
+                className="flex items-center justify-center w-[60px] h-full bg-[#F0EAFF] rounded-r-2xl shrink-0 cursor-pointer"
               >
                 <span className="text-sm font-semibold text-[#7C3AED]">{t('wallet.all')}</span>
               </button>
